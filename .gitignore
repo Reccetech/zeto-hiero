@@ -1,0 +1,51 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# Build artifacts
+artifacts/
+cache/
+typechain-types/
+coverage/
+coverage.json
+*.tsbuildinfo
+dist/
+
+# Hardhat-deploy artifacts (DO commit deployment records — they are part of the repo)
+# deployments/ stays in git
+deployments/localhost/
+deployments/hardhat/
+
+# OZ Upgrades manifest — keep the file in git for production networks, ignore ephemeral
+.openzeppelin/unknown-*.json
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Circuit artifacts (large; produced by snarkjs)
+# Sources stay in git; build outputs do not
+circuits/build/
+circuits/powersOfTau/*.ptau
+
+# Foundry
+forge-cache/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Test outputs
+test-results/
+*.log
+
+# Tools — generated files
+contracts/generated/*.sol.bak

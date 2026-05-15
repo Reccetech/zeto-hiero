@@ -1,0 +1,3 @@
+[submodule "vendor/zeto"]
+	path = vendor/zeto
+	url = https://github.com/hyperledger-labs/zeto
