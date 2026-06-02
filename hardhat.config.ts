@@ -32,12 +32,17 @@ const config: HardhatUserConfig = {
       chainId: 296,
       accounts: operatorKey ? [operatorKey] : [],
       timeout: 120_000,
+      // Hedera requires an explicit legacy gasPrice with margin over the network's
+      // ~970 gwei, otherwise the relay rejects the auto-estimated fee with
+      // INSUFFICIENT_TX_FEE. You pay for gas actually used; this is just the ceiling.
+      gasPrice: 1_500_000_000_000, // 1500 gwei
     },
     hedera_mainnet: {
       url: mainnetRpc,
       chainId: 295,
       accounts: operatorKey ? [operatorKey] : [],
       timeout: 120_000,
+      gasPrice: 1_500_000_000_000, // 1500 gwei
     },
   },
   namedAccounts: {
