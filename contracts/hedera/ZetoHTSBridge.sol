@@ -28,6 +28,13 @@ abstract contract ZetoHTSBridge is OwnableUpgradeable {
     function __ZetoHTSBridge_init() internal onlyInitializing {}
 
     function associateHTSToken(address tokenAddress) external onlyOwner {
+        _associate(tokenAddress);
+    }
+
+    /// @dev Association logic shared by the external owner-gated entry point and by
+    /// composing contracts (e.g. HederaZetoTokenLite.setupHTS) that are themselves
+    /// owner-gated and need to associate without an external self-call.
+    function _associate(address tokenAddress) internal {
         if (!htsAssociated[tokenAddress]) {
             int64 responseCode = HTS.associateToken(address(this), tokenAddress);
             if (
