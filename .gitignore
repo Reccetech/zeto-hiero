@@ -49,3 +49,8 @@ test-results/
 
 # Tools — generated files
 contracts/generated/*.sol.bak
+
+# Phase 5 circuit build artifacts (large; regenerate via tools/bin/circom + snarkjs)
+circuits/build/
+circuits/ptau/
+tools/bin/
