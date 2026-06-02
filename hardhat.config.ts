@@ -17,6 +17,9 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: { enabled: true, runs: 200 },
       viaIR: true,
+      // Hedera runs Cancun EVM (PRD §5). Required for OZ Arrays.sol `mcopy` opcode
+      // and matches upstream Zeto's compilation target.
+      evmVersion: "cancun",
     },
   },
   networks: {
