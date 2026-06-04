@@ -44,6 +44,12 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const name = process.env.POOL_NAME ?? "Hedera Zeto MVP Pool";
   const symbol = process.env.POOL_SYMBOL ?? "ZTEST";
 
+  // Hedera: explicit gasLimit via txOverrides so the upgrades plugin skips eth_estimateGas
+  // (Hashio rejects it with INSUFFICIENT_TX_FEE). Applies to both the implementation and
+  // the ERC1967 proxy deploy. No-op on local Hardhat.
+  const isHedera = hre.network.config.chainId === 296 || hre.network.config.chainId === 295;
+  const txOverrides = isHedera ? { gasLimit: 6_000_000 } : undefined;
+
   const Factory = await ethers.getContractFactory("HederaZetoTokenLite");
   const pool = await upgrades.deployProxy(
     Factory,
@@ -52,7 +58,7 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
     // rather than declaring its own. The OZ plugin's static analysis doesn't recognize
     // inherited initializers; the inherited one is structurally correct. See the
     // uups-init-pattern memory note.
-    { kind: "uups", initializer: "initialize", unsafeAllow: ["missing-initializer"] }
+    { kind: "uups", initializer: "initialize", unsafeAllow: ["missing-initializer"], txOverrides }
   );
   await pool.waitForDeployment();
   const proxyAddress = await pool.getAddress();

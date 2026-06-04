@@ -29,12 +29,19 @@ const func: DeployFunction = async (hre: HardhatRuntimeEnvironment) => {
   const { deploy, log } = deployments;
   const { deployer } = await getNamedAccounts();
 
+  // Hedera: pass an explicit gasLimit so hardhat-deploy skips eth_estimateGas, which the
+  // Hashio relay rejects with INSUFFICIENT_TX_FEE. Combined with the config's explicit
+  // gasPrice. The AnonEnc verifier (~12.5 KB) is the largest; 6M covers all of them.
+  const isHedera = hre.network.config.chainId === 296 || hre.network.config.chainId === 295;
+  const overrides = isHedera ? { gasLimit: 6_000_000 } : {};
+
   for (const v of VERIFIERS) {
     const result = await deploy(v.name, {
       contract: v.contract,
       from: deployer,
       log: true,
       waitConfirmations: 1,
+      ...overrides,
     });
     log(`  ${v.name} (${v.contract}) -> ${result.address}`);
   }
