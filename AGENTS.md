@@ -11,23 +11,22 @@ All live in the parent folder `../` (i.e. `C:/repos/Privacy Proposal/`):
 3. **`../PRD-Zeto-Hiero.md`** — full production design spec (≈6,000 lines). Reference it via `§` section numbers cited in the build plan; don't read end-to-end.
 4. **`../BUILD-PLAN-Zeto-Hiero.md`** — the full production roadmap (v0.2 → v1.0), for context beyond the MVP.
 
-## Where we are (2026-06-01)
+## Where we are (2026-06-03)
 
-MVP v0.1, Phases 0–4 complete; **Phase 5 partial**. 12 commits on local `main`, **84 tests passing**.
+✅ **MVP v0.1 COMPLETE.** All phases done. ~14 commits on local `main`, **85 tests passing**.
 
 - Built & tested: `HederaZetoTokenLite` (the pool = upstream `Zeto_AnonEnc` + our `ZetoHTSBridge`), plus foundation contracts (`SanctionsModule`, `HederaKycRegistry`, `ZetoVkeySetter`) that aren't wired into v0.1 yet.
-- **Proven on real Hedera testnet:** a real Groth16 **deposit** proof verified on-chain (~276K gas, ~0.27 HBAR). See `scripts/testnet-deposit-proof.ts`.
+- **Full shielded flow proven on Hedera testnet** with a real HTS token: deposit → private transfer → withdraw, balances reconcile (Alice 900 + Bob 40 + pool 60 == 1000). Gas: deposit 325,347 · transfer 415,954 · withdraw 330,392 · setupHTS 783,314. See `scripts/demo-mvp-testnet.ts` + `scripts/phase6-create-token.ts`; HashScan links in `../BUILD-PLAN-MVP-Zeto-Hiero.md` (Phase 6) and `../MVP-Zeto-Hiero.md` §6.1.
+- Transfer-witness tooling lives in `test/lib/zeto-witness.ts` (uses `maci-crypto` + `zeto-js`; proofs via `snarkjs.groth16.fullProve` against `circuits/build/`). `maci-crypto` 1.1.1 builds + loads fine on Windows — the native-dep worry didn't materialize.
 
-## Your next task (completes v0.1)
+## Your next task (v0.2 — KYC)
 
-**Phase 5 finish → Phase 6.** Run the full pool-level `deposit → transfer → withdraw` with real proofs, locally first, then on testnet.
+v0.1 is shipped. The next increment is **v0.2 — KYC enforcement** (see `../BUILD-PLAN-Zeto-Hiero.md`):
 
-The blocking piece is the **transfer (`anon_enc`) witness**: each output note must be ECDH-encrypted to the recipient's BabyJubJub public key (with an encryption nonce + Poseidon-derived shared secret). Two paths:
-
-- **Recommended first attempt:** hand-roll the ECDH encryption with `circomlibjs` (already a dependency, no native build). Mirror what upstream's `zeto-js` does in `vendor/zeto/zkp/js/lib/util.js` (`newEncryptionNonce`, `poseidonDecrypt`, etc.).
-- **Fallback:** install upstream `zeto-js` (`file:vendor/zeto/zkp/js`) + `maci-crypto`. ⚠️ `maci-crypto` has native dependencies that are painful on Windows — only go here if the hand-rolled path stalls.
-
-Then drive `pool.deposit() → pool.transfer() → pool.withdraw()` and assert balances reconcile (Alice + Bob + pool = constant). The deposit half is already proven; transfer + withdraw complete it. The `anon_enc` transfer circuit is ~20× the deposit circuit, so capture its on-chain verification gas — that number is still unknown.
+- Swap `Zeto_AnonEnc` → `Zeto_AnonEncNullifierKyc` (the KYC variant adds a nullifier SMT + identity-membership signals — this pulls in `@iden3/contracts` for `SmtLib`/Poseidon, which v0.1 deliberately skipped).
+- Wire in the existing `HederaKycRegistry` (UUPS, already built + tested).
+- Extend `test/lib/zeto-witness.ts` for the KYC circuit's witness (nullifiers, merkle proofs, KYC membership). Compile the `anon_enc_nullifier_kyc` circuit (needs 2¹⁶ ptau — already on disk) and stage its verifier the same way we did the v0.1 ones.
+- Enroll Alice & Bob, then re-run a demo with KYC active.
 
 ## Environment (same machine, already set up)
 
@@ -54,7 +53,11 @@ Then drive `pool.deposit() → pool.transfer() → pool.withdraw()` and assert b
 ```bash
 npm install
 npx hardhat compile
-npm test                                                    # 84 tests
-npx hardhat run scripts/testnet-deposit-proof.ts --network hedera_testnet   # the proven deposit demo
-npx hardhat deploy --tags lite-pool --network hardhat       # local pool deploy
+npm test                                                       # 85 tests
+npx hardhat deploy --tags lite-pool --network hardhat          # local pool deploy
+# Testnet v0.1 demo (real HTS token + full shielded flow):
+npx hardhat run scripts/phase6-create-token.ts --network hedera_testnet   # one-time: create token, associate, fund
+npx hardhat run scripts/demo-mvp-testnet.ts --network hedera_testnet      # deposit -> transfer -> withdraw
 ```
+
+**Testnet gotcha:** `hardhat deploy` batches txs and trips the Hashio relay's nonce tracking (`NONCE_EXPIRED`). For testnet, deploy with a self-contained ethers script (sequential `await waitForDeployment()` per contract) — see `scripts/demo-mvp-testnet.ts`. Always pass an explicit `gasLimit` (skips `eth_estimateGas`, which the relay rejects with `INSUFFICIENT_TX_FEE`); raw `ethers.Wallet`s also need an explicit `gasPrice` (1500 gwei).
