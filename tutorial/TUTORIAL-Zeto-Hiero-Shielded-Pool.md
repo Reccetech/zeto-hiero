@@ -306,6 +306,8 @@ At this point the public ledger shows: **Alice = 1000**, **Bob = 0**, **operator
 > **Why ethers here, not the Hiero SDK?** The pool is a **UUPS proxy** and the deposit/transfer/withdraw calls carry an ABI-encoded Groth16 proof **struct** — both are far simpler through `ethers`/Hardhat than the native SDK. The token underneath is still pure HTS.
 >
 > **Hedera gas gotcha.** Hedera rejects auto-estimated fees with `INSUFFICIENT_TX_FEE`. Set an explicit `gasPrice` (1500 gwei) and an explicit `gasLimit` on every transaction to bypass the relay's `eth_estimateGas`.
+>
+> **What the verifier contracts are (and the trusted-setup key).** Each verifier embeds the **verifying key** from our Groth16 trusted setup — the public parameters it uses to check a proof made with the matching **proving key** (the `.zkey` in `circuits/build/` that the deposit/transfer/withdraw steps prove against). The verifier and the proving key are a matched set from the *same* setup. So if you **rebuild the circuit artifacts** (they're gitignored — see [`../circuits/REBUILD.md`](../circuits/REBUILD.md)), you get a fresh, internally-consistent set that **won't** match a previously deployed verifier — you must re-run this deploy step so the pool points at your regenerated verifiers. (v0.1's setup is a single-party throwaway, insecure by design; production uses a multi-party ceremony. Background: [`HOW-ZETO-WORKS.md`](HOW-ZETO-WORKS.md#the-proving-and-verifying-keys-the-trusted-setup).)
 
 05-deploy-pool.ts
 

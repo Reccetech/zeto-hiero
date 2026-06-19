@@ -85,6 +85,17 @@ Because the amounts are hidden, how does the contract know Alice isn't cheating 
 
 The contract checks this proof and accepts the transfer only if it holds. So the system stays sound — no value is created or destroyed — while every number stays secret. (The proof is generated on Alice's machine; only the small proof is sent on-chain, which is why the *amounts* never leave her device.)
 
+#### The proving and verifying keys (the trusted setup)
+
+The proof system has two halves that must match. Alice generates her proof with a **proving key**; the pool's verifier contract checks it with the matching **verifying key** baked into that contract at deploy time. Both are produced once per circuit by a **trusted setup** (a Groth16 "Powers of Tau" + a circuit-specific phase). They are the fixed public parameters of the proof system — not anyone's secret, not per-transaction — and a proving key only produces proofs that its paired verifying key will accept.
+
+Two practical consequences:
+
+- **They are a matched set.** A verifier deployed from one setup rejects proofs made with a proving key from a *different* setup. So the on-chain verifier and the client-side proving key must come from the same setup.
+- **They can be regenerated — but the result differs.** The keys aren't shipped in the repo (they're large and gitignored). Re-running the setup produces a fresh, internally-consistent set that **won't** match a previously deployed verifier, so you'd redeploy. The how-to is in [`../circuits/REBUILD.md`](../circuits/REBUILD.md).
+
+**Security note (v0.1):** the setup here is a single-party, throwaway one — fine for an MVP, but **not secure**: whoever ran it could in principle use the leftover setup secret ("toxic waste") to forge proofs that the verifier would accept. A production deployment needs a **multi-party ceremony** in which no single participant ever holds the full secret (only one honest participant is required for soundness). That ceremony is a v1.0 item — see the roadmap.
+
 ### 3. Note discovery — how Bob finds out he was paid (ECDH)
 
 There's a puzzle: the chain now holds Bob's commitment, but Bob can't spend it unless he learns its secret `value` and `salt` — and Alice chose those. Sending Bob a private message would defeat the point. Zeto solves this by **encrypting the note into the transaction itself**, so the only thing Bob needs is his own private key.
@@ -134,6 +145,7 @@ Privacy is real but not absolute, and it's worth being precise:
 - **The public boundaries leak at the edges.** Deposits and withdrawals show real amounts and real accounts. If Alice deposits 100 and shortly after an unrelated-looking account withdraws 40, amount/timing correlation can suggest a link. Privacy is strongest when many users transact and amounts/timing vary — i.e. it depends on the size of the **anonymity set**.
 - **This variant reveals which note was spent.** `Zeto_AnonEnc` marks the *input commitment* as spent, so the graph of "this note was spent to create those notes" is visible (as a web of anonymous, valueless fingerprints). It hides amounts, owners, and the sender→recipient identity link — but not the existence of the spend itself. Roadmap variants add **nullifiers**, which hide even *which* note was spent, breaking that last link.
 - **No compliance layer yet.** v0.1 deliberately omits KYC, sanctions screening, and auditor viewing keys. Those are later versions (see [`../MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md) roadmap) and change the privacy/oversight balance on purpose.
+- **The trusted setup is a toy.** v0.1's proving/verifying keys come from an insecure single-party setup (see above). Soundness against a malicious setup operator needs the multi-party ceremony planned for v1.0.
 
 ---
 
@@ -147,6 +159,7 @@ Privacy is real but not absolute, and it's worth being precise:
 | **Zero-knowledge proof** | Enforces value conservation + ownership *without revealing amounts* |
 | **ECDH + ephemeral key** | Lets the recipient (and only the recipient) discover their note from the chain |
 | **Poseidon cipher** | ZK-friendly encryption, cheap to prove correct inside the circuit |
+| **Proving / verifying key (trusted setup)** | Matched per-circuit parameters: the prover makes a proof with the proving key; the on-chain verifier checks it with the embedded verifying key. Regenerable via the rebuild (then redeploy). |
 
 ---
 
