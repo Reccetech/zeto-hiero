@@ -5,14 +5,14 @@ Zeto privacy pool for Hedera Smart Contract Service. Hyperledger Labs Zeto + Hed
 ## Documents
 
 - **MVP overview:** [MVP-Zeto-Hiero.md](MVP-Zeto-Hiero.md) — architecture, how it works, performance, roadmap
-- **Roadmap:** [ROADMAP.md](ROADMAP.md) · **Release notes:** [RELEASE-NOTES.md](RELEASE-NOTES.md)
+- **Roadmap:** [MVP-Zeto-Hiero.md §7](MVP-Zeto-Hiero.md#7-roadmap) · **Release notes:** [RELEASE-NOTES.md](RELEASE-NOTES.md)
 - **Tutorial:** [tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md](tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md) (runnable walkthrough) · [tutorial/HOW-ZETO-WORKS.md](tutorial/HOW-ZETO-WORKS.md) (privacy model)
 - **Rebuild circuits:** [circuits/REBUILD.md](circuits/REBUILD.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
 - **Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full spec), BUILD-PLAN-Zeto-Hiero.md (production roadmap)
 
 ## Status
 
-v0.1 (MVP) complete — full shielded deposit/transfer/withdraw on Hedera testnet with real ZK proofs. See [RELEASE-NOTES.md](RELEASE-NOTES.md) and [ROADMAP.md](ROADMAP.md).
+v0.1 (MVP) complete — full shielded deposit/transfer/withdraw on Hedera testnet with real ZK proofs. See [RELEASE-NOTES.md](RELEASE-NOTES.md) and the roadmap in [MVP-Zeto-Hiero.md §7](MVP-Zeto-Hiero.md#7-roadmap).
 
 ## Quick start
 

@@ -2,7 +2,7 @@
 
 **Status:** ✅ v0.1 COMPLETE — full shielded deposit/transfer/withdraw runs on Hedera testnet with a real HTS token and real ZK proofs; balances reconcile.
 **Repo:** `C:/repos/Privacy Proposal/zeto-hiero/` (local-only during development)
-**In this repo:** [ROADMAP.md](ROADMAP.md) · [RELEASE-NOTES.md](RELEASE-NOTES.md) · [tutorial/](tutorial/) (runnable walkthrough + how-it-works)
+**In this repo:** [RELEASE-NOTES.md](RELEASE-NOTES.md) · [tutorial/](tutorial/) (runnable walkthrough + how-it-works) · the version roadmap is §7 below
 **Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full product spec) · BUILD-PLAN-Zeto-Hiero.md (production roadmap) · BUILD-PLAN-MVP-Zeto-Hiero.md (MVP checklist)
 **Last updated:** 2026-06-01
 
