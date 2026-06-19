@@ -3,7 +3,7 @@
  * Transaction: TransferTransaction.
  *
  * Independently runnable from the repo root (zeto-hiero/):
- *   npx ts-node tutorial/04-fund-alice.ts
+ *   npx ts-node examples/walkthrough/04-fund-alice.ts
  * Requires in .env: operator creds, ALICE_ACCOUNT_ID, and
  *   TOKEN_ID (or UNDERLYING_TOKEN_ADDRESS) — run 02 (and 03) first.
  */
@@ -14,7 +14,7 @@ import {
 } from "@hiero-ledger/sdk";
 
 // ── Config (self-contained) ────────────────────────────────────────────────
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 function operatorClient() {
   const operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ACCOUNT_ID!);

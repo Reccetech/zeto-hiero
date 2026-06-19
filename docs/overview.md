@@ -1,10 +1,10 @@
 # Zeto-Hiero MVP (v0.1) — Architecture, Tutorial, Performance, Roadmap
 
 **Status:** ✅ v0.1 COMPLETE — full shielded deposit/transfer/withdraw runs on Hedera testnet with a real HTS token and real ZK proofs; balances reconcile.
-**Repo:** `C:/repos/Privacy Proposal/zeto-hiero/` (local-only during development)
-**In this repo:** [RELEASE-NOTES.md](RELEASE-NOTES.md) · [tutorial/](tutorial/) (runnable walkthrough) · the privacy model is §2, the version roadmap is §7
+**Repo:** github.com/Reccetech/zeto-hiero (private)
+**In this repo:** [release-notes.md](release-notes.md) · [tutorial.md](tutorial.md) · [../examples/walkthrough/](../examples/walkthrough/) (runnable walkthrough) · the privacy model is §2, the version roadmap is §7
 **Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full product spec) · BUILD-PLAN-Zeto-Hiero.md (production roadmap) · BUILD-PLAN-MVP-Zeto-Hiero.md (MVP checklist)
-**Last updated:** 2026-06-01
+**Last updated:** 2026-06-18
 
 ---
 
@@ -79,7 +79,7 @@ The recipient reverses it using the ECDH symmetry `ephPriv · recipientPubKey ==
 
 ### 2.5 The proving and verifying keys (trusted setup)
 
-Groth16 has two matched halves: the sender proves with a **proving key**, and the on-chain verifier checks with the matching **verifying key** baked into the verifier contract at deploy time. Both come, once per circuit, from a **trusted setup** (a Powers-of-Tau phase plus a circuit-specific phase) — fixed public parameters, not anyone's secret. Two consequences: (1) they are a *matched set* — a verifier from one setup rejects proofs from a different setup, so the deployed verifier and the client proving key must share a setup; and (2) they are regenerable, but a re-run yields a fresh set that won't match an already-deployed verifier, so you'd redeploy (see [`circuits/REBUILD.md`](circuits/REBUILD.md)). **Security note (v0.1):** this MVP's setup is a single-party, throwaway one — convenient but *not secure*, because whoever ran it could in principle use the leftover secret ("toxic waste") to forge proofs the verifier would accept. Production requires a **multi-party ceremony** in which no single participant ever holds the full secret (one honest participant suffices for soundness); that is a v1.0 item (see [Roadmap](#7-roadmap)).
+Groth16 has two matched halves: the sender proves with a **proving key**, and the on-chain verifier checks with the matching **verifying key** baked into the verifier contract at deploy time. Both come, once per circuit, from a **trusted setup** (a Powers-of-Tau phase plus a circuit-specific phase) — fixed public parameters, not anyone's secret. Two consequences: (1) they are a *matched set* — a verifier from one setup rejects proofs from a different setup, so the deployed verifier and the client proving key must share a setup; and (2) they are regenerable, but a re-run yields a fresh set that won't match an already-deployed verifier, so you'd redeploy (see [`rebuild-circuits.md`](rebuild-circuits.md)). **Security note (v0.1):** this MVP's setup is a single-party, throwaway one — convenient but *not secure*, because whoever ran it could in principle use the leftover secret ("toxic waste") to forge proofs the verifier would accept. Production requires a **multi-party ceremony** in which no single participant ever holds the full secret (one honest participant suffices for soundness); that is a v1.0 item (see [Roadmap](#7-roadmap)).
 
 ### 2.6 Honest limits of v0.1 privacy
 
@@ -244,7 +244,7 @@ The demo deploys the verifiers and the `HederaZetoTokenLite` proxy, calls `setup
 
 This is the full operator story end to end: **deploy the service → create an HTS token → move tokens into the shielded pool → operate privately → move tokens back out**, all on live Hedera testnet with real ZK proofs. It uses the two scripts from §5.5; this section explains exactly what each phase does, what you should see, and what to check on HashScan.
 
-> **Step-by-step SDK tutorial:** for a Hedera-tutorial-style, transaction-by-transaction walkthrough (Hiero JS SDK for the native HTS steps + `ethers` for the pool calls, with copy-paste code and console output for each step), see the standalone [`tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md`](tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md).
+> **Step-by-step SDK tutorial:** for a Hedera-tutorial-style, transaction-by-transaction walkthrough (Hiero JS SDK for the native HTS steps + `ethers` for the pool calls, with copy-paste code and console output for each step), see the standalone [`tutorial.md`](tutorial.md).
 
 > **Scope note (v0.1 today):** the flow is driven by two scripts with **fixed demo amounts** (deposit 100, transfer 40 + 60 change, withdraw 40) and the three `.env` accounts (operator, Alice, Bob). `demo-mvp-testnet.ts` deploys a **fresh** pool on each run and does not persist the pool address for later reuse. Parameterized, separately-runnable per-operation commands against a persistent deployment are a future tooling step — not part of v0.1.
 
@@ -392,18 +392,21 @@ v0.1 is complete. The next increment is **v0.2 — KYC enforcement**: swap `Zeto
 
 ```
 zeto-hiero/
+├── README.md            Entry point + quick start
+├── AGENTS.md            Contributor / AI handoff
+├── docs/                All prose docs:
+│                        overview.md (this file), tutorial.md, run-results.md,
+│                        rebuild-circuits.md, release-notes.md
 ├── contracts/
 │   ├── hedera/          HederaZetoTokenLite, ZetoHTSBridge, SanctionsModule,
 │   │                    HederaKycRegistry, ZetoVkeySetter, IHederaTokenService, HederaResponseCodes
 │   ├── verifiers/       Our Groth16 verifiers: DepositVerifierMVP, AnonEncVerifierMVP, WithdrawVerifierMVP
 │   └── test/            Mocks (HTS precompile, ERC-20, verifier) + test harness contracts
-├── circuits/
-│   ├── build/           Compiled .r1cs/.wasm/.zkey/vkey (gitignored; regenerable)
-│   └── ptau/            Powers of Tau (gitignored)
+├── circuits/            build/ + ptau/ (both gitignored; regenerable — see docs/rebuild-circuits.md)
 ├── deploy/              hardhat-deploy scripts (verifiers, vkey-setter, lite-pool) — local
 ├── scripts/             phase6-create-token.ts, demo-mvp-testnet.ts, testnet-deposit-proof.ts, check-test-accounts.ts
+├── examples/walkthrough/  Runnable per-transaction tutorial scripts (01–09 + _zeto.ts)
 ├── test/                85 tests (unit + integration + real-proof) + lib/zeto-witness.ts
-├── tools/bin/           circom.exe (gitignored)
 └── vendor/zeto/         Upstream Zeto v0.2.2 (git submodule)
 ```
 

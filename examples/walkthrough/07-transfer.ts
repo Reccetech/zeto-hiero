@@ -4,7 +4,7 @@
  * the amounts and the Alice->Bob link; Bob recovers his note by decrypting the on-chain event.
  *
  * Runnable (needs the Hardhat project + compiled circuits):
- *   npx hardhat run tutorial/07-transfer.ts --network hedera_testnet
+ *   npx hardhat run examples/walkthrough/07-transfer.ts --network hedera_testnet
  * Requires: step 06 (deposit) already run — Alice's note is read from .tutorial-state.json.
  *
  * Persists Bob's recovered 40-unit note for step 08.
@@ -12,10 +12,10 @@
 import { ethers } from "hardhat";
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { newUTXO, ZERO_UTXO, prepareTransferProof, decryptNote } from "../test/lib/zeto-witness";
+import { newUTXO, ZERO_UTXO, prepareTransferProof, decryptNote } from "../../test/lib/zeto-witness";
 import { loadUser, requirePool, readState, writeState } from "./_zeto";
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const TX_GAS = 3_000_000n;
 const GAS_PRICE = ethers.parseUnits("1500", "gwei");
@@ -23,7 +23,7 @@ const GAS_PRICE = ethers.parseUnits("1500", "gwei");
 async function main() {
   const poolAddr = requirePool();
   const st = readState();
-  if (!st.aliceNote) throw new Error("No aliceNote in state — run tutorial/06-deposit.ts first.");
+  if (!st.aliceNote) throw new Error("No aliceNote in state — run examples/walkthrough/06-deposit.ts first.");
 
   const aliceWallet = new ethers.Wallet(process.env.ALICE_PRIVATE_KEY_HEX!, ethers.provider);
   const bobWallet = new ethers.Wallet(process.env.BOB_PRIVATE_KEY_HEX!, ethers.provider);

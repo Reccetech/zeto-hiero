@@ -67,12 +67,12 @@ These are forward-looking pieces for later versions; they are not part of the v0
   vkey setter, an upstream-Zeto smoke test, real-proof deposit, and the full end-to-end MVP flow.
   Abstract mixins are tested via `TestXxx` subclasses; the HTS precompile is mocked at `0x167`.
 
-#### Tutorial (`tutorial/`) — added this release
+#### Tutorial (`examples/walkthrough/`) — added this release
 - Per-transaction runnable scripts (`01`–`09`) plus a shared `_zeto.ts` state/user helper.
-- **`TUTORIAL-Zeto-Hiero-Shielded-Pool.md`** — runnable JS-SDK + ethers walkthrough.
-- **`RUN-RESULTS.md`** — captured testnet run with entities, HashScan URLs, gas, and USD fees.
+- **`tutorial.md`** — runnable JS-SDK + ethers walkthrough.
+- **`run-results.md`** — captured testnet run with entities, HashScan URLs, gas, and USD fees.
 
-The conceptual privacy model (notes, commitments, the ZK proof, ECDH note discovery) is documented in `MVP-Zeto-Hiero.md` §2.
+The conceptual privacy model (notes, commitments, the ZK proof, ECDH note discovery) is documented in `overview.md` §2.
 
 ### Intentional deltas from the production design (PRD)
 v0.1 deliberately diverges from the full production design in `../PRD-Zeto-Hiero.md` to ship quickly:
@@ -96,7 +96,7 @@ proofs; balances reconcile (Alice 900 + Bob 40 + pool 60 = 1000). Representative
 | transfer | ~415,930 |
 | withdraw | ~330,404 |
 
-See `tutorial/RUN-RESULTS.md` for a captured run with HashScan links and USD fees.
+See `run-results.md` for a captured run with HashScan links and USD fees.
 
 ### Compatibility
 - Solidity **0.8.27**, EVM **Cancun**, Node **20+**.

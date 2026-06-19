@@ -14,13 +14,13 @@ In this tutorial you will run the full lifecycle on **Hedera testnet** with the 
 
 Every native step follows the same shape: **build → (freeze + sign) → execute → get receipt → log status + Transaction ID + HashScan URL.** Every contract step submits via `ethers`, waits for the receipt, and logs the tx hash + gas.
 
-> **Want the "why" instead of the "how"?** This tutorial is the runnable walkthrough. For a plain-language explanation of what Alice and Bob are doing in Zeto terms — notes, commitments, the zero-knowledge proof, and how the transfer stays private — see the privacy model in [`../MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md#2-the-privacy-model--whats-hidden-and-what-isnt) (§2).
+> **Want the "why" instead of the "how"?** This tutorial is the runnable walkthrough. For a plain-language explanation of what Alice and Bob are doing in Zeto terms — notes, commitments, the zero-knowledge proof, and how the transfer stays private — see the privacy model in [`overview.md`](overview.md#2-the-privacy-model--whats-hidden-and-what-isnt) (§2).
 
 > **A note on names.** The Hiero JS SDK is published as **`@hiero-ledger/sdk`** (the package formerly distributed as `@hashgraph/sdk`), now stewarded as the Linux Foundation **Hiero** project. The API is identical; only the package name changed.
 >
 > **Two layers, two tools.** Native HTS actions (create accounts, create token, associate, fund) go through the **Hiero JS SDK** straight to consensus nodes — Sections 1–4. The pool actions (deploy, deposit, transfer, withdraw) are **EVM smart-contract calls** that carry ZK proofs and deploy a **UUPS proxy**, so they go through **`ethers` + Hardhat** via the Hashio JSON-RPC relay — Sections 5–9. Each section states which layer it uses.
 >
-> **Runnable scripts.** Every section maps to a real file under `tutorial/` and runs against testnet. Sections 1–4 run with `ts-node`; Sections 5–9 run with `npx hardhat run` (they need the Hardhat project: compiled artifacts, the OpenZeppelin upgrades plugin, the witness helpers, and the network config). The same logic also ships as two combined scripts, `scripts/phase6-create-token.ts` (1–4) and `scripts/demo-mvp-testnet.ts` (5–9).
+> **Runnable scripts.** Every section maps to a real file under `examples/walkthrough/` and runs against testnet. Sections 1–4 run with `ts-node`; Sections 5–9 run with `npx hardhat run` (they need the Hardhat project: compiled artifacts, the OpenZeppelin upgrades plugin, the witness helpers, and the network config). The same logic also ships as two combined scripts, `scripts/phase6-create-token.ts` (1–4) and `scripts/demo-mvp-testnet.ts` (5–9).
 
 ---
 
@@ -28,12 +28,12 @@ Every native step follows the same shape: **build → (freeze + sign) → execut
 
 - A funded Hedera **testnet** operator account (account ID + ECDSA private key) from the [Hedera Portal](https://portal.hedera.com/).
 - Node.js 20+, and from the repo root: `npm install` then `npx hardhat compile` (compiles the pool + vendored Zeto contracts and produces the artifacts the deploy step reads; requires the `cancun` EVM target already set in `hardhat.config.ts`).
-- Compiled circuits in `circuits/build/` (the proving keys + WASM the proofs are generated against). These are gitignored; on a fresh clone, regenerate them via [`../circuits/REBUILD.md`](../circuits/REBUILD.md).
+- Compiled circuits in `circuits/build/` (the proving keys + WASM the proofs are generated against). These are gitignored; on a fresh clone, regenerate them via [`rebuild-circuits.md`](rebuild-circuits.md).
 - Dependencies used here: `@hiero-ledger/sdk`, `hardhat` + `ethers`, `@openzeppelin/hardhat-upgrades`, and the witness helpers (`maci-crypto`, `zeto-js`) wired up in `test/lib/zeto-witness.ts`.
 
 ✅ If you just want the complete code, skip to the [Code Check](#code-check) section.
 
-This tutorial maps to the per-transaction files in `tutorial/` (see `tutorial/README.md`), and to two combined scripts:
+This tutorial maps to the per-transaction files in `examples/walkthrough/` (see `examples/walkthrough/README.md`), and to two combined scripts:
 
 - `scripts/phase6-create-token.ts` — the native HTS setup (Sections 1–4)
 - `scripts/demo-mvp-testnet.ts` — the pool deploy + shielded flow (Sections 5–9)
@@ -123,7 +123,7 @@ console.log(`BOB_PRIVATE_KEY_HEX=0x${bob.key.toStringRaw()}`);
 Run with:
 
 ```bash
-npx ts-node tutorial/01-create-accounts.ts
+npx ts-node examples/walkthrough/01-create-accounts.ts
 ```
 
 #### Example output:
@@ -193,7 +193,7 @@ console.log("Token EVM address        :", tokenEvm);
 Run with:
 
 ```bash
-npx ts-node tutorial/02-create-token.ts
+npx ts-node examples/walkthrough/02-create-token.ts
 ```
 
 #### Example output:
@@ -244,7 +244,7 @@ for (const actor of [
 Run with:
 
 ```bash
-npx ts-node tutorial/03-associate-token.ts
+npx ts-node examples/walkthrough/03-associate-token.ts
 ```
 
 #### Example output:
@@ -292,7 +292,7 @@ console.log("Hashscan URL             :", `https://hashscan.io/testnet/transacti
 Run with:
 
 ```bash
-npx ts-node tutorial/04-fund-alice.ts
+npx ts-node examples/walkthrough/04-fund-alice.ts
 ```
 
 At this point the public ledger shows: **Alice = 1000**, **Bob = 0**, **operator/treasury = 999,000**.
@@ -307,7 +307,7 @@ At this point the public ledger shows: **Alice = 1000**, **Bob = 0**, **operator
 >
 > **Hedera gas gotcha.** Hedera rejects auto-estimated fees with `INSUFFICIENT_TX_FEE`. Set an explicit `gasPrice` (1500 gwei) and an explicit `gasLimit` on every transaction to bypass the relay's `eth_estimateGas`.
 >
-> **What the verifier contracts are (and the trusted-setup key).** Each verifier embeds the **verifying key** from our Groth16 trusted setup — the public parameters it uses to check a proof made with the matching **proving key** (the `.zkey` in `circuits/build/` that the deposit/transfer/withdraw steps prove against). The verifier and the proving key are a matched set from the *same* setup. So if you **rebuild the circuit artifacts** (they're gitignored — see [`../circuits/REBUILD.md`](../circuits/REBUILD.md)), you get a fresh, internally-consistent set that **won't** match a previously deployed verifier — you must re-run this deploy step so the pool points at your regenerated verifiers. (v0.1's setup is a single-party throwaway, insecure by design; production uses a multi-party ceremony. Background: [`../MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md) §2.5.)
+> **What the verifier contracts are (and the trusted-setup key).** Each verifier embeds the **verifying key** from our Groth16 trusted setup — the public parameters it uses to check a proof made with the matching **proving key** (the `.zkey` in `circuits/build/` that the deposit/transfer/withdraw steps prove against). The verifier and the proving key are a matched set from the *same* setup. So if you **rebuild the circuit artifacts** (they're gitignored — see [`rebuild-circuits.md`](rebuild-circuits.md)), you get a fresh, internally-consistent set that **won't** match a previously deployed verifier — you must re-run this deploy step so the pool points at your regenerated verifiers. (v0.1's setup is a single-party throwaway, insecure by design; production uses a multi-party ceremony. Background: [`overview.md`](overview.md) §2.5.)
 
 05-deploy-pool.ts
 
@@ -357,13 +357,13 @@ console.log(`- pool: https://hashscan.io/testnet/contract/${poolAddr}`);
 const setupTx = await pool.setupHTS(token, { gasLimit: TX_GAS });
 const setupRcpt = await setupTx.wait();
 console.log(`- setupHTS gas ${setupRcpt.gasUsed} | tx ${setupTx.hash}`);
-// The script saves poolAddr to tutorial/.tutorial-state.json for the next steps.
+// The script saves poolAddr to examples/walkthrough/.tutorial-state.json for the next steps.
 ```
 
 Run with:
 
 ```bash
-npx hardhat run tutorial/05-deploy-pool.ts --network hedera_testnet
+npx hardhat run examples/walkthrough/05-deploy-pool.ts --network hedera_testnet
 ```
 
 #### Example output:
@@ -427,7 +427,7 @@ writeState({ aliceNote: { value: 100, salt: utxo100.salt.toString() } });
 Run with:
 
 ```bash
-npx hardhat run tutorial/06-deposit.ts --network hedera_testnet
+npx hardhat run examples/walkthrough/06-deposit.ts --network hedera_testnet
 ```
 
 #### Example output:
@@ -510,7 +510,7 @@ writeState({ bobNote: { value: Number(recovered.value), salt: recovered.salt.toS
 Run with:
 
 ```bash
-npx hardhat run tutorial/07-transfer.ts --network hedera_testnet
+npx hardhat run examples/walkthrough/07-transfer.ts --network hedera_testnet
 ```
 
 #### Example output:
@@ -562,7 +562,7 @@ console.log(`- withdraw proof ${wd.ms}ms | gas ${rcpt.gasUsed} | tx ${wdTx.hash}
 Run with:
 
 ```bash
-npx hardhat run tutorial/08-withdraw.ts --network hedera_testnet
+npx hardhat run examples/walkthrough/08-withdraw.ts --network hedera_testnet
 ```
 
 #### Example output:
@@ -610,7 +610,7 @@ console.log(`reconcile (Alice+Bob+pool) = ${aliceBal + bobBal + poolBal} (expect
 Run with:
 
 ```bash
-npx hardhat run tutorial/09-reconcile.ts --network hedera_testnet
+npx hardhat run examples/walkthrough/09-reconcile.ts --network hedera_testnet
 ```
 
 #### Example output:
@@ -629,11 +629,11 @@ The pool invariant holds: **`shieldedSupply == pool token balance == 60`**, and 
 
 You created HTS accounts and a fungible token with the Hiero JS SDK, deployed a zero-knowledge **shielded pool** on Hedera testnet, and ran a full **deposit → private transfer → withdraw** lifecycle with **real Groth16 proofs**. The deposit and withdraw amounts are public (the auditable on/off-ramps), while the in-pool transfer hides amounts and the sender→recipient link. The whole flow cost roughly 0.3–0.8 HBAR per step in gas, with client-side proof generation dominating latency.
 
-This is **v0.1** — it deliberately excludes KYC, sanctions screening, and regulator auditability. Those land in later versions ([roadmap](../MVP-Zeto-Hiero.md#7-roadmap)). v0.2 adds KYC enforcement by swapping the pool's transfer circuit for `Zeto_AnonEncNullifierKyc` and wiring the `HederaKycRegistry`.
+This is **v0.1** — it deliberately excludes KYC, sanctions screening, and regulator auditability. Those land in later versions ([roadmap](overview.md#7-roadmap)). v0.2 adds KYC enforcement by swapping the pool's transfer circuit for `Zeto_AnonEncNullifierKyc` and wiring the `HederaKycRegistry`.
 
 > **Scope note (v0.1):** the per-step files use **fixed demo amounts** (deposit 100, transfer 40 + 60 change, withdraw 40) and the three `.env` accounts, and deploy a **fresh** pool on each run of step 05 (the pool address is saved to `.tutorial-state.json`, not `.env`). Parameterized per-operation commands against a persistent deployment are a future tooling step.
 >
-> **State across steps:** because each step is its own process, the per-step files persist each user's BabyJubJub keypair and the spendable notes to `tutorial/.tutorial-state.json` (the combined `demo-mvp-testnet.ts` threads these in memory instead). Delete that file to start a clean run.
+> **State across steps:** because each step is its own process, the per-step files persist each user's BabyJubJub keypair and the spendable notes to `examples/walkthrough/.tutorial-state.json` (the combined `demo-mvp-testnet.ts` threads these in memory instead). Delete that file to start a clean run.
 
 ---
 
@@ -655,7 +655,7 @@ This is **v0.1** — it deliberately excludes KYC, sanctions screening, and regu
 
 ## Code Check
 
-Per-transaction files live in `tutorial/` (see `tutorial/README.md` for the full run list). The same logic also ships as two combined scripts:
+Per-transaction files live in `examples/walkthrough/` (see `examples/walkthrough/README.md` for the full run list). The same logic also ships as two combined scripts:
 
 - **`scripts/phase6-create-token.ts`** — Sections 1–4: create the HTS token, associate Alice & Bob, fund Alice, and write `UNDERLYING_TOKEN_ADDRESS` to `.env`.
 - **`scripts/demo-mvp-testnet.ts`** — Sections 5–9: deploy the verifiers + pool, `setupHTS`, then deposit → private transfer (with Bob decrypting his note) → withdraw, printing per-step gas, HashScan links, and the final reconciliation.
@@ -676,4 +676,4 @@ The witness/proof helpers (`newUser`, `newUTXO`, `prepareDepositProof`, `prepare
 - Transfer: [`0x6ab062…a3321`](https://hashscan.io/testnet/transaction/0x6ab0621e78c129a6c3fa80927054781d364b74d967473535fd470cbe791a3321)
 - Withdraw: [`0x1cb220…1f5b8`](https://hashscan.io/testnet/transaction/0x1cb220b2eae1138312fe4a5e880513073e22f301944267e4cadb8cc638b1f5b8)
 
-See [`MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md) for the architecture, privacy model, performance metrics, and roadmap.
+See [`overview.md`](overview.md) for the architecture, privacy model, performance metrics, and roadmap.

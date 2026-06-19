@@ -4,20 +4,23 @@ You are continuing work on **zeto-hiero**, a privacy-preserving token pool for H
 
 ## Read these, in order
 
-All live in the parent folder `../` (i.e. `C:/repos/Privacy Proposal/`):
+In this repo (under `docs/`):
 
-1. **`../MVP-Zeto-Hiero.md`** — architecture, how it works, performance, roadmap. Start here for the big picture.
-2. **`../TUTORIAL-Zeto-Hiero-Shielded-Pool.md`** — standalone Hedera-tutorial-style walkthrough (9 numbered sections, code + console output for each step, layer table, Code Check). Created 2026-06-10.
-3. **`../BUILD-PLAN-MVP-Zeto-Hiero.md`** — the active work checklist (v0.1). The **Status:** line at the top says exactly where we are. Phases are checkbox-tracked.
-4. **`../PRD-Zeto-Hiero.md`** — full production design spec (≈6,000 lines). Reference it via `§` section numbers cited in the build plan; don't read end-to-end.
-5. **`../BUILD-PLAN-Zeto-Hiero.md`** — the full production roadmap (v0.2 → v1.0), for context beyond the MVP.
+1. **`docs/overview.md`** — architecture, how it works (privacy model in §2), performance, roadmap. Start here for the big picture.
+2. **`docs/tutorial.md`** — transaction-by-transaction walkthrough; the runnable scripts are in `examples/walkthrough/`.
+
+Internal design docs (kept in the working folder `../`, not committed to this repo):
+
+3. **`BUILD-PLAN-MVP-Zeto-Hiero.md`** — the active work checklist (v0.1); phases are checkbox-tracked.
+4. **`PRD-Zeto-Hiero.md`** — full production design spec (≈6,000 lines). Reference by `§` section numbers; don't read end-to-end.
+5. **`BUILD-PLAN-Zeto-Hiero.md`** — the full production roadmap (v0.2 → v1.0).
 
 ## Where we are (2026-06-10)
 
 ✅ **MVP v0.1 COMPLETE.** All phases done. ~14 commits on local `main`, **85 tests passing**.
 
 - Built & tested: `HederaZetoTokenLite` (the pool = upstream `Zeto_AnonEnc` + our `ZetoHTSBridge`), plus foundation contracts (`SanctionsModule`, `HederaKycRegistry`, `ZetoVkeySetter`) that aren't wired into v0.1 yet.
-- **Full shielded flow proven on Hedera testnet** with a real HTS token: deposit → private transfer → withdraw, balances reconcile (Alice 900 + Bob 40 + pool 60 == 1000). Gas: deposit 325,347 · transfer 415,954 · withdraw 330,392 · setupHTS 783,314. See `scripts/demo-mvp-testnet.ts` + `scripts/phase6-create-token.ts`; HashScan links in `../BUILD-PLAN-MVP-Zeto-Hiero.md` (Phase 6) and `../MVP-Zeto-Hiero.md` §6.1.
+- **Full shielded flow proven on Hedera testnet** with a real HTS token: deposit → private transfer → withdraw, balances reconcile (Alice 900 + Bob 40 + pool 60 == 1000). Gas: deposit 325,347 · transfer 415,954 · withdraw 330,392 · setupHTS 783,314. See `scripts/demo-mvp-testnet.ts` + `scripts/phase6-create-token.ts`; HashScan links in `docs/overview.md` §6.1 (and the internal `BUILD-PLAN-MVP-Zeto-Hiero.md` Phase 6).
 - Transfer-witness tooling lives in `test/lib/zeto-witness.ts` (uses `maci-crypto` + `zeto-js`; proofs via `snarkjs.groth16.fullProve` against `circuits/build/`). `maci-crypto` 1.1.1 builds + loads fine on Windows — the native-dep worry didn't materialize.
 
 ## Your next task (v0.2 — KYC)

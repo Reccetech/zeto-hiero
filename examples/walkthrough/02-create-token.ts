@@ -3,7 +3,7 @@
  * Transaction: TokenCreateTransaction (FungibleCommon, operator = treasury).
  *
  * Independently runnable from the repo root (zeto-hiero/):
- *   npx ts-node tutorial/02-create-token.ts
+ *   npx ts-node examples/walkthrough/02-create-token.ts
  * Requires in .env: HEDERA_OPERATOR_ACCOUNT_ID, HEDERA_OPERATOR_PRIVATE_KEY_HEX
  *
  * Writes TOKEN_ID and UNDERLYING_TOKEN_ADDRESS back to ./.env so the later steps
@@ -18,7 +18,7 @@ import {
 } from "@hiero-ledger/sdk";
 
 // ── Config (self-contained) ────────────────────────────────────────────────
-const ENV_PATH = path.resolve(__dirname, "../.env");
+const ENV_PATH = path.resolve(__dirname, "../../.env");
 dotenv.config({ path: ENV_PATH });
 
 function operatorClient() {

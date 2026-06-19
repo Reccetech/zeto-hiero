@@ -4,7 +4,7 @@
  * and checks that total value is conserved (expected 1000 with the demo amounts).
  *
  * Runnable (needs the Hardhat project for the provider + pool ABI):
- *   npx hardhat run tutorial/09-reconcile.ts --network hedera_testnet
+ *   npx hardhat run examples/walkthrough/09-reconcile.ts --network hedera_testnet
  * Requires: a deployed pool (step 05) in .tutorial-state.json and UNDERLYING_TOKEN_ADDRESS.
  */
 import { ethers } from "hardhat";
@@ -12,7 +12,7 @@ import * as path from "path";
 import * as dotenv from "dotenv";
 import { requirePool } from "./_zeto";
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const ERC20_ABI = ["function balanceOf(address account) view returns (uint256)"];
 

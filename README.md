@@ -1,17 +1,20 @@
 # zeto-hiero
 
-Zeto privacy pool for Hedera Smart Contract Service. Hyperledger Labs Zeto + Hedera-specific contracts, SDK, and deployment tooling.
+Zeto privacy pool for Hedera Smart Contract Service. Hyperledger Labs Zeto + Hedera-specific contracts, circuits, and tooling.
 
 ## Documents
 
-- **MVP overview:** [MVP-Zeto-Hiero.md](MVP-Zeto-Hiero.md) — architecture, how it works, performance, roadmap
-- **Release notes:** [RELEASE-NOTES.md](RELEASE-NOTES.md)
-- **Tutorial:** [tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md](tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md) (runnable walkthrough); the privacy model is in [MVP-Zeto-Hiero.md §2](MVP-Zeto-Hiero.md#2-the-privacy-model--whats-hidden-and-what-isnt)
-- **Rebuild circuits:** [circuits/REBUILD.md](circuits/REBUILD.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
+All prose lives in [`docs/`](docs/):
+
+- **Overview:** [docs/overview.md](docs/overview.md) — architecture, how it works (incl. the privacy model in §2), performance, roadmap
+- **Tutorial:** [docs/tutorial.md](docs/tutorial.md) — transaction-by-transaction walkthrough (runnable scripts in [`examples/walkthrough/`](examples/walkthrough/))
+- **Run results:** [docs/run-results.md](docs/run-results.md) — a captured testnet run (entities, HashScan links, gas, fees)
+- **Rebuild circuits:** [docs/rebuild-circuits.md](docs/rebuild-circuits.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
+- **Release notes:** [docs/release-notes.md](docs/release-notes.md)
 
 ## Status
 
-v0.1 (MVP) complete — full shielded deposit/transfer/withdraw on Hedera testnet with real ZK proofs. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
+v0.1 (MVP) complete — full shielded deposit/transfer/withdraw on Hedera testnet with real ZK proofs. See [docs/release-notes.md](docs/release-notes.md).
 
 ## Quick start
 
@@ -30,20 +33,16 @@ npm test
 
 | Path | Purpose |
 |---|---|
-| `contracts/hedera/` | Hedera-specific Solidity (HTS bridge, sanctions, KYC, pool) |
-| `contracts/lib/` | Poseidon libraries (deployed once, linked) |
-| `contracts/interfaces/` | Interface contracts (IGroth16Verifier, IHederaKycRegistry) |
-| `contracts/verifiers/` | Generated Groth16 verifiers (snarkjs output, gitignored) |
-| `contracts/generated/` | Generated public-signal layout constants (build-time) |
-| `circuits/sources/` | Circom sources (Hedera-specific circuits) |
-| `circuits/build/` | Compiled `.wasm`, `.r1cs`, `.zkey`, `.vkey.json` (gitignored) |
-| `sdk/` | `@hiero-privacy/zeto-sdk` TypeScript package |
-| `deploy/` | hardhat-deploy scripts (numbered 00–07) |
-| `scripts/` | Operational scripts (enroll, update-sanctions-root, pause, etc.) |
-| `test/` | Solidity + integration tests |
-| `tools/` | Build tools (export-verifiers, gen-public-signal-layouts, gen-authority-constants) |
-| `vendor/zeto/` | Upstream Zeto submodule (pinned) |
-| `docs/` | Operator runbook, ceremony documentation, gas profile |
+| `docs/` | All prose: overview, tutorial, run-results, rebuild-circuits, release-notes |
+| `contracts/hedera/` | Hedera-specific Solidity (pool, HTS bridge, KYC, sanctions, vkey-setter) |
+| `contracts/verifiers/` | Generated Groth16 verifiers (DepositVerifierMVP, AnonEncVerifierMVP, WithdrawVerifierMVP) |
+| `contracts/test/` | Test-only mocks + harness contracts |
+| `circuits/` | Circuit build artifacts (`build/`, `ptau/`) — gitignored; regenerate via `docs/rebuild-circuits.md` |
+| `deploy/` | hardhat-deploy scripts (verifiers, vkey-setter, lite-pool) |
+| `scripts/` | Operational + testnet scripts (token setup, demo, connectivity checks) |
+| `examples/walkthrough/` | Runnable per-transaction tutorial scripts (01–09 + `_zeto.ts`) |
+| `test/` | Test suite (unit + integration + real-proof) + `lib/zeto-witness.ts` |
+| `vendor/zeto/` | Upstream Zeto submodule (pinned v0.2.2) |
 
 ## License
 

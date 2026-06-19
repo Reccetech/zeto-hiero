@@ -3,7 +3,7 @@
  * Transaction: AccountCreateTransaction (ECDSA key + EVM alias).
  *
  * Independently runnable from the repo root (zeto-hiero/):
- *   npx ts-node tutorial/01-create-accounts.ts
+ *   npx ts-node examples/walkthrough/01-create-accounts.ts
  * Requires in .env: HEDERA_OPERATOR_ACCOUNT_ID, HEDERA_OPERATOR_PRIVATE_KEY_HEX
  *
  * Prints ALICE_/BOB_ .env lines to copy into ./.env for the later steps.
@@ -13,7 +13,7 @@ import * as dotenv from "dotenv";
 import { Client, AccountId, PrivateKey, Hbar, AccountCreateTransaction } from "@hiero-ledger/sdk";
 
 // ── Config (self-contained) ────────────────────────────────────────────────
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 function operatorClient() {
   const operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ACCOUNT_ID!);

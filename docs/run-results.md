@@ -58,7 +58,7 @@ Public ledger after Step 4: **Alice = 1000**, **Bob = 0**, **treasury = 999,000*
 | withdraw verifier | `0xF5768CfaC6742a51E39BbE2596ed1322F94d7ED6` | [contract](https://hashscan.io/testnet/contract/0xF5768CfaC6742a51E39BbE2596ed1322F94d7ED6) |
 | **pool** (`HederaZetoTokenLite`, UUPS proxy) | `0xa24A9aAEC0495c50194572CCF2bfDc00cf3D229D` | [contract](https://hashscan.io/testnet/contract/0xa24A9aAEC0495c50194572CCF2bfDc00cf3D229D) |
 
-A `MockGroth16Verifier` (batch placeholder) was also deployed. `poolAddr` saved to `tutorial/.tutorial-state.json`.
+A `MockGroth16Verifier` (batch placeholder) was also deployed. `poolAddr` saved to `examples/walkthrough/.tutorial-state.json`.
 
 - `setupHTS(token)` — tx `0xe58bc767b78fec4d0f3fbdbc20edef5bd98e41cfaa8a396f1130c549911312f8` · gas **783,314** · fee 0.8303 HBAR (**~$0.0667**) · [HashScan](https://hashscan.io/testnet/transaction/0xe58bc767b78fec4d0f3fbdbc20edef5bd98e41cfaa8a396f1130c549911312f8)
 

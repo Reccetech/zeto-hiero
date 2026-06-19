@@ -3,7 +3,7 @@
 The compiled circuit artifacts (`circuits/build/`) and the Powers-of-Tau files (`circuits/ptau/`) are **gitignored** — they're large and regenerable. A fresh clone can compile contracts and run the mock-based tests, but the **real-proof tests and the tutorial's proof steps (deposit / transfer / withdraw) need these artifacts**. This doc shows how to regenerate them.
 
 > ⚠️ **Read this first — regenerated keys will NOT match the committed verifiers.**
-> The trusted setup below uses a fresh, single-party (toy) contribution, so each rebuild produces a **different** proving/verifying key — and therefore a different verifier contract — than the ones committed in `contracts/verifiers/*VerifierMVP.sol` and deployed on testnet. That's expected and fine: a rebuilt set is **internally consistent** (proofs verify against the matching verifier). To use a rebuilt set on-chain you must **redeploy** the regenerated verifiers (the tutorial's deploy step does this). You cannot reproduce the exact committed/deployed verifiers — and you don't need to: v1.0 replaces this whole toy setup with a real multi-party ceremony (see `../MVP-Zeto-Hiero.md` §7 Roadmap).
+> The trusted setup below uses a fresh, single-party (toy) contribution, so each rebuild produces a **different** proving/verifying key — and therefore a different verifier contract — than the ones committed in `contracts/verifiers/*VerifierMVP.sol` and deployed on testnet. That's expected and fine: a rebuilt set is **internally consistent** (proofs verify against the matching verifier). To use a rebuilt set on-chain you must **redeploy** the regenerated verifiers (the tutorial's deploy step does this). You cannot reproduce the exact committed/deployed verifiers — and you don't need to: v1.0 replaces this whole toy setup with a real multi-party ceremony (see `overview.md` §7 Roadmap).
 
 ---
 
@@ -121,7 +121,7 @@ npm test                  # mock + real-proof tests should pass against the rebu
 To use the rebuilt set on Hedera testnet, **deploy a fresh pool** so it points at your regenerated verifiers (the deploy step deploys the `*VerifierMVP` contracts you just wrote):
 
 ```bash
-npx hardhat run tutorial/05-deploy-pool.ts --network hedera_testnet
+npx hardhat run examples/walkthrough/05-deploy-pool.ts --network hedera_testnet
 # then steps 06–09 as in the tutorial
 ```
 
@@ -163,11 +163,11 @@ for name in deposit withdraw anon_enc; do
 done
 
 npx hardhat compile
-echo "Rebuild complete. Redeploy the pool (tutorial/05) to use the regenerated verifiers."
+echo "Rebuild complete. Redeploy the pool (examples/walkthrough/05) to use the regenerated verifiers."
 ```
 
 ---
 
 ## Why the committed verifiers can't be reproduced bit-for-bit
 
-Groth16 proving/verifying keys depend on the random entropy contributed during `zkey contribute`. The original v0.1 setup's entropy was not preserved (deliberately — it's a throwaway toy setup), so a rebuild necessarily yields different keys. This is acceptable for the MVP: the committed verifiers exist only to demonstrate the flow on testnet. The production path (v1.0) discards all of this and runs a real, multi-party, auditable Powers-of-Tau + Phase-2 ceremony whose transcript *is* preserved and verifiable. See [`../MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md) (§7 Roadmap) and [`../RELEASE-NOTES.md`](../RELEASE-NOTES.md).
+Groth16 proving/verifying keys depend on the random entropy contributed during `zkey contribute`. The original v0.1 setup's entropy was not preserved (deliberately — it's a throwaway toy setup), so a rebuild necessarily yields different keys. This is acceptable for the MVP: the committed verifiers exist only to demonstrate the flow on testnet. The production path (v1.0) discards all of this and runs a real, multi-party, auditable Powers-of-Tau + Phase-2 ceremony whose transcript *is* preserved and verifiable. See [`overview.md`](overview.md) (§7 Roadmap) and [`release-notes.md`](release-notes.md).

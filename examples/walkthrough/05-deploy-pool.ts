@@ -1,10 +1,10 @@
 /**
  * Tutorial §5 — Deploy the Shielded-Pool Service + setupHTS
  * Deploys the verifiers and the HederaZetoTokenLite UUPS proxy via ethers + the OZ upgrades
- * plugin, then calls setupHTS. Writes the pool address to tutorial/.tutorial-state.json.
+ * plugin, then calls setupHTS. Writes the pool address to examples/walkthrough/.tutorial-state.json.
  *
  * Runnable (needs the Hardhat project: artifacts, upgrades plugin, network config):
- *   npx hardhat run tutorial/05-deploy-pool.ts --network hedera_testnet
+ *   npx hardhat run examples/walkthrough/05-deploy-pool.ts --network hedera_testnet
  * Requires in .env: operator account (hardhat signer) + UNDERLYING_TOKEN_ADDRESS (run 02 first).
  *
  * Why ethers, not the Hiero SDK: the pool is a UUPS proxy (upgrades.deployProxy deploys the
@@ -16,7 +16,7 @@ import * as path from "path";
 import * as dotenv from "dotenv";
 import { writeState } from "./_zeto";
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const DEPLOY_GAS = 6_000_000n;
@@ -82,7 +82,7 @@ async function main() {
   console.log("Gas used                   :", setupRcpt!.gasUsed.toString());
 
   writeState({ poolAddr, verifiers: { anonEnc, deposit, withdraw, batch } });
-  console.log(`\nSaved poolAddr to tutorial/.tutorial-state.json for the next steps.`);
+  console.log(`\nSaved poolAddr to examples/walkthrough/.tutorial-state.json for the next steps.`);
 }
 
 main().catch((e) => {

@@ -5,14 +5,14 @@
  * in memory. Here each step is its own script, so we persist:
  *   - each user's BabyJubJub keypair (so a note's Poseidon hash is identical across steps), and
  *   - the spendable notes ({value, salt}) produced by one step and consumed by the next.
- * State lives in tutorial/.tutorial-state.json (gitignored — it is throwaway demo state).
+ * State lives in examples/walkthrough/.tutorial-state.json (gitignored — it is throwaway demo state).
  */
 import * as fs from "fs";
 import * as path from "path";
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { genKeypair, formatPrivKeyForBabyJub } = require("maci-crypto");
 /* eslint-enable @typescript-eslint/no-var-requires */
-import type { User } from "../test/lib/zeto-witness";
+import type { User } from "../../test/lib/zeto-witness";
 
 const STATE_FILE = path.resolve(__dirname, ".tutorial-state.json");
 
@@ -60,6 +60,6 @@ export async function loadUser(name: string, signer: any): Promise<User> {
 
 export function requirePool(): string {
   const { poolAddr } = readState();
-  if (!poolAddr) throw new Error("No pool in state — run tutorial/05-deploy-pool.ts first.");
+  if (!poolAddr) throw new Error("No pool in state — run examples/walkthrough/05-deploy-pool.ts first.");
   return poolAddr;
 }

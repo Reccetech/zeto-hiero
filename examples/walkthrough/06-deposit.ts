@@ -4,19 +4,19 @@
  * the HTS tokens via transferFrom and mints a shielded commitment only Alice can spend.
  *
  * Runnable (needs the Hardhat project + compiled circuits in circuits/build/):
- *   npx hardhat run tutorial/06-deposit.ts --network hedera_testnet
+ *   npx hardhat run examples/walkthrough/06-deposit.ts --network hedera_testnet
  * Requires: steps 02 (token) + 04 (Alice funded) + 05 (pool deployed) already run.
  *
- * Persists Alice's 100-unit note (value + salt) to tutorial/.tutorial-state.json so step 07
+ * Persists Alice's 100-unit note (value + salt) to examples/walkthrough/.tutorial-state.json so step 07
  * can spend it (each step is a separate process; see _zeto.ts).
  */
 import { ethers } from "hardhat";
 import * as path from "path";
 import * as dotenv from "dotenv";
-import { newUTXO, ZERO_UTXO, prepareDepositProof } from "../test/lib/zeto-witness";
+import { newUTXO, ZERO_UTXO, prepareDepositProof } from "../../test/lib/zeto-witness";
 import { loadUser, requirePool, writeState } from "./_zeto";
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const TX_GAS = 3_000_000n;
 const GAS_PRICE = ethers.parseUnits("1500", "gwei");

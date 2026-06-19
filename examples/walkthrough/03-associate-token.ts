@@ -3,7 +3,7 @@
  * Transaction: TokenAssociateTransaction (each account signs its own association).
  *
  * Independently runnable from the repo root (zeto-hiero/):
- *   npx ts-node tutorial/03-associate-token.ts
+ *   npx ts-node examples/walkthrough/03-associate-token.ts
  * Requires in .env: operator creds, ALICE_/BOB_ account id + key, and
  *   TOKEN_ID (or UNDERLYING_TOKEN_ADDRESS) — run 01 and 02 first.
  */
@@ -14,7 +14,7 @@ import {
 } from "@hiero-ledger/sdk";
 
 // ── Config (self-contained) ────────────────────────────────────────────────
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 function operatorClient() {
   const operatorId = AccountId.fromString(process.env.HEDERA_OPERATOR_ACCOUNT_ID!);
