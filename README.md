@@ -11,6 +11,7 @@ All prose lives in [`docs/`](docs/):
 - **Run results:** [docs/run-results.md](docs/run-results.md) — a captured testnet run (entities, HashScan links, gas, fees)
 - **Rebuild circuits:** [docs/rebuild-circuits.md](docs/rebuild-circuits.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
 - **Release notes:** [docs/release-notes.md](docs/release-notes.md)
+- **Privacy strategy:** [docs/privacy-strategy.md](docs/privacy-strategy.md) — proposed Hedera privacy approach and how this project fits
 
 ## Status
 
@@ -33,7 +34,7 @@ npm test
 
 | Path | Purpose |
 |---|---|
-| `docs/` | All prose: overview, tutorial, run-results, rebuild-circuits, release-notes |
+| `docs/` | All prose: overview, tutorial, run-results, rebuild-circuits, release-notes, privacy-strategy |
 | `contracts/hedera/` | Hedera-specific Solidity (pool, HTS bridge, KYC, sanctions, vkey-setter) |
 | `contracts/verifiers/` | Generated Groth16 verifiers (DepositVerifierMVP, AnonEncVerifierMVP, WithdrawVerifierMVP) |
 | `contracts/test/` | Test-only mocks + harness contracts |
