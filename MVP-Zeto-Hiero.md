@@ -2,7 +2,7 @@
 
 **Status:** ✅ v0.1 COMPLETE — full shielded deposit/transfer/withdraw runs on Hedera testnet with a real HTS token and real ZK proofs; balances reconcile.
 **Repo:** `C:/repos/Privacy Proposal/zeto-hiero/` (local-only during development)
-**In this repo:** [RELEASE-NOTES.md](RELEASE-NOTES.md) · [tutorial/](tutorial/) (runnable walkthrough + how-it-works) · the version roadmap is §7 below
+**In this repo:** [RELEASE-NOTES.md](RELEASE-NOTES.md) · [tutorial/](tutorial/) (runnable walkthrough) · the privacy model is §2, the version roadmap is §7
 **Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full product spec) · BUILD-PLAN-Zeto-Hiero.md (production roadmap) · BUILD-PLAN-MVP-Zeto-Hiero.md (MVP checklist)
 **Last updated:** 2026-06-01
 
@@ -47,6 +47,48 @@ Zeto is a **UTXO (unspent-transaction-output) commitment** system, conceptually 
 The information boundaries are the deposit and withdraw endpoints; everything in between is private. This is the `Zeto_AnonEnc` variant — **anonymity + encryption**, the simplest variant that supports recipient discovery.
 
 > **v0.1 limitation:** there is no KYC gate, no sanctions screening, and no regulator viewing-key in the MVP. Anyone can transact, and only the transacting parties can see amounts. Compliance features are added in v0.2–v0.4.
+
+### 2.1 Two identities: the account that pays vs. the Zeto owner key
+
+The Hedera account a user signs transactions with is **not** how Zeto identifies them inside the pool. Each participant has a separate **owner key** — a BabyJubJub keypair (a curve chosen because it is cheap to use inside ZK circuits) — and a note "belongs to" whoever holds the matching owner key. Owner keys never appear on-chain in the clear, so knowing someone's *account* tells an observer nothing about which *notes* they own.
+
+### 2.2 Notes, commitments, and why the salt matters
+
+Inside the pool there are no balances, only **notes** — records of the form `{ value, salt, owner }`. What is stored on-chain is never the note, only its **commitment**: `Poseidon(value, salt, ownerPubKeyX, ownerPubKeyY)`. The commitment is a one-way fingerprint that pins the note down exactly while revealing nothing. The **salt** (a fresh random number per note) is what makes this safe: without it, an observer could guess a small set of likely values and hash them to recognise a note, and two equal-value notes would look identical. To *spend* a note you must know all three secrets (`value`, `salt`, and the owner private key) — so the chain holds only fingerprints, and only the owner holds the preimage.
+
+### 2.3 What the transfer proof guarantees
+
+A private transfer hides the amounts, so how does the contract know the sender isn't cheating (e.g. spending a 100-note and minting two 1,000-notes)? The Groth16 proof. Without revealing any secret value, it guarantees:
+
+- **Value is conserved** — input total exactly equals output total (e.g. 100 = 40 + 60).
+- **Ownership** — the spender holds the owner private key for each input note.
+- **Well-formed outputs** — each output commitment is a correct hash of its hidden `(value, salt, owner)`.
+- **Honest encryption** — the encrypted payload (below) really contains the output notes, not junk.
+
+The contract accepts the transfer only if the proof holds, so the system stays sound while every number stays secret. The proof is generated on the sender's machine; only the small proof goes on-chain, which is why the amounts never leave the device.
+
+### 2.4 How the recipient discovers their note (ECDH)
+
+The chain holds the recipient's commitment, but they can't spend it until they learn its secret `value` and `salt` — which the sender chose. Rather than send a side message, Zeto **encrypts the note into the transfer itself**, so the recipient needs only their own private key. When the sender builds the transfer, the circuit also:
+
+1. generates a throwaway **ephemeral keypair** `(ephPriv, ephPub)`, new for that one transfer;
+2. derives a shared secret with the recipient, `shared = ephPriv · recipientPubKey` (a curve point-multiplication — this is **ECDH**); and
+3. encrypts the recipient's `(value, salt)` under `shared` (a ZK-friendly Poseidon cipher), publishing the ciphertext and the ephemeral **public** key in the transfer event. `ephPriv` is never published.
+
+The recipient reverses it using the ECDH symmetry `ephPriv · recipientPubKey == recipientPrivKey · ephPub`: both sides equal the same shared secret, but the recipient's route needs their private key, which only they hold. They recompute the secret, decrypt, recover `(value, salt)`, and reconstruct the spendable note (the `value=40` line in the walkthrough). Consequences: **only the recipient can read it**; discovery is **trustless** (the proof guaranteed the ciphertext matches the committed note); and in practice a wallet **scans** transfer events and tries to decrypt each, treating a note as theirs when the decrypted `(value, salt)` hashes to an on-chain commitment under their key. The fresh ephemeral key per transfer also keeps repeated payments between the same parties from being clustered.
+
+### 2.5 The proving and verifying keys (trusted setup)
+
+Groth16 has two matched halves: the sender proves with a **proving key**, and the on-chain verifier checks with the matching **verifying key** baked into the verifier contract at deploy time. Both come, once per circuit, from a **trusted setup** (a Powers-of-Tau phase plus a circuit-specific phase) — fixed public parameters, not anyone's secret. Two consequences: (1) they are a *matched set* — a verifier from one setup rejects proofs from a different setup, so the deployed verifier and the client proving key must share a setup; and (2) they are regenerable, but a re-run yields a fresh set that won't match an already-deployed verifier, so you'd redeploy (see [`circuits/REBUILD.md`](circuits/REBUILD.md)). **Security note (v0.1):** this MVP's setup is a single-party, throwaway one — convenient but *not secure*, because whoever ran it could in principle use the leftover secret ("toxic waste") to forge proofs the verifier would accept. Production requires a **multi-party ceremony** in which no single participant ever holds the full secret (one honest participant suffices for soundness); that is a v1.0 item (see [Roadmap](#7-roadmap)).
+
+### 2.6 Honest limits of v0.1 privacy
+
+Privacy is real but not absolute:
+
+- **The public boundaries leak at the edges.** Deposits and withdrawals show real amounts and accounts; a deposit of 100 followed soon after by a withdrawal of 40 can be correlated by amount/timing. Privacy strengthens with the size of the **anonymity set** (many users, varied amounts and timing).
+- **This variant reveals which note was spent.** `Zeto_AnonEnc` marks the *input commitment* as spent, so the graph of "this note produced those notes" is visible — as a web of anonymous, valueless fingerprints. It hides amounts, owners, and the sender→recipient identity link, but not the existence of the spend. The **nullifier**-based variants on the roadmap (v0.2+) hide even *which* note was spent.
+- **No compliance layer yet.** v0.1 omits KYC, sanctions screening, and auditor viewing keys by design (v0.2–v0.4).
+- **The trusted setup is a toy** (see §2.5) — soundness against a malicious setup operator needs the v1.0 ceremony.
 
 ---
 

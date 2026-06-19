@@ -6,7 +6,7 @@ Zeto privacy pool for Hedera Smart Contract Service. Hyperledger Labs Zeto + Hed
 
 - **MVP overview:** [MVP-Zeto-Hiero.md](MVP-Zeto-Hiero.md) — architecture, how it works, performance, roadmap
 - **Release notes:** [RELEASE-NOTES.md](RELEASE-NOTES.md)
-- **Tutorial:** [tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md](tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md) (runnable walkthrough) · [tutorial/HOW-ZETO-WORKS.md](tutorial/HOW-ZETO-WORKS.md) (privacy model)
+- **Tutorial:** [tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md](tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md) (runnable walkthrough); the privacy model is in [MVP-Zeto-Hiero.md §2](MVP-Zeto-Hiero.md#2-the-privacy-model--whats-hidden-and-what-isnt)
 - **Rebuild circuits:** [circuits/REBUILD.md](circuits/REBUILD.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
 
 ## Status

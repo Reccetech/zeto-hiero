@@ -70,9 +70,9 @@ These are forward-looking pieces for later versions; they are not part of the v0
 #### Tutorial (`tutorial/`) — added this release
 - Per-transaction runnable scripts (`01`–`09`) plus a shared `_zeto.ts` state/user helper.
 - **`TUTORIAL-Zeto-Hiero-Shielded-Pool.md`** — runnable JS-SDK + ethers walkthrough.
-- **`HOW-ZETO-WORKS.md`** — conceptual companion explaining the privacy model (notes, commitments,
-  the ZK proof, ECDH note discovery).
 - **`RUN-RESULTS.md`** — captured testnet run with entities, HashScan URLs, gas, and USD fees.
+
+The conceptual privacy model (notes, commitments, the ZK proof, ECDH note discovery) is documented in `MVP-Zeto-Hiero.md` §2.
 
 ### Intentional deltas from the production design (PRD)
 v0.1 deliberately diverges from the full production design in `../PRD-Zeto-Hiero.md` to ship quickly:

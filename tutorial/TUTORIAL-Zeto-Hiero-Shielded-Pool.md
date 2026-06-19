@@ -14,7 +14,7 @@ In this tutorial you will run the full lifecycle on **Hedera testnet** with the 
 
 Every native step follows the same shape: **build → (freeze + sign) → execute → get receipt → log status + Transaction ID + HashScan URL.** Every contract step submits via `ethers`, waits for the receipt, and logs the tx hash + gas.
 
-> **Want the "why" instead of the "how"?** This tutorial is the runnable walkthrough. For a plain-language explanation of what Alice and Bob are doing in Zeto terms — notes, commitments, the zero-knowledge proof, and how the transfer stays private — read the companion doc [`HOW-ZETO-WORKS.md`](HOW-ZETO-WORKS.md).
+> **Want the "why" instead of the "how"?** This tutorial is the runnable walkthrough. For a plain-language explanation of what Alice and Bob are doing in Zeto terms — notes, commitments, the zero-knowledge proof, and how the transfer stays private — see the privacy model in [`../MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md#2-the-privacy-model--whats-hidden-and-what-isnt) (§2).
 
 > **A note on names.** The Hiero JS SDK is published as **`@hiero-ledger/sdk`** (the package formerly distributed as `@hashgraph/sdk`), now stewarded as the Linux Foundation **Hiero** project. The API is identical; only the package name changed.
 >
@@ -307,7 +307,7 @@ At this point the public ledger shows: **Alice = 1000**, **Bob = 0**, **operator
 >
 > **Hedera gas gotcha.** Hedera rejects auto-estimated fees with `INSUFFICIENT_TX_FEE`. Set an explicit `gasPrice` (1500 gwei) and an explicit `gasLimit` on every transaction to bypass the relay's `eth_estimateGas`.
 >
-> **What the verifier contracts are (and the trusted-setup key).** Each verifier embeds the **verifying key** from our Groth16 trusted setup — the public parameters it uses to check a proof made with the matching **proving key** (the `.zkey` in `circuits/build/` that the deposit/transfer/withdraw steps prove against). The verifier and the proving key are a matched set from the *same* setup. So if you **rebuild the circuit artifacts** (they're gitignored — see [`../circuits/REBUILD.md`](../circuits/REBUILD.md)), you get a fresh, internally-consistent set that **won't** match a previously deployed verifier — you must re-run this deploy step so the pool points at your regenerated verifiers. (v0.1's setup is a single-party throwaway, insecure by design; production uses a multi-party ceremony. Background: [`HOW-ZETO-WORKS.md`](HOW-ZETO-WORKS.md#the-proving-and-verifying-keys-the-trusted-setup).)
+> **What the verifier contracts are (and the trusted-setup key).** Each verifier embeds the **verifying key** from our Groth16 trusted setup — the public parameters it uses to check a proof made with the matching **proving key** (the `.zkey` in `circuits/build/` that the deposit/transfer/withdraw steps prove against). The verifier and the proving key are a matched set from the *same* setup. So if you **rebuild the circuit artifacts** (they're gitignored — see [`../circuits/REBUILD.md`](../circuits/REBUILD.md)), you get a fresh, internally-consistent set that **won't** match a previously deployed verifier — you must re-run this deploy step so the pool points at your regenerated verifiers. (v0.1's setup is a single-party throwaway, insecure by design; production uses a multi-party ceremony. Background: [`../MVP-Zeto-Hiero.md`](../MVP-Zeto-Hiero.md) §2.5.)
 
 05-deploy-pool.ts
 
