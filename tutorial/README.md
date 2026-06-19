@@ -42,7 +42,8 @@ From the repo root (`zeto-hiero/`):
 ```bash
 npm install                 # installs @hiero-ledger/sdk, hardhat, ethers, witness deps, ...
 npx hardhat compile         # produces the artifacts the deploy step reads (cancun EVM target)
-# circuits/build/ must contain the compiled .wasm/.zkey (proving keys) — see ../AGENTS.md
+# circuits/build/ must contain the compiled .wasm/.zkey (proving keys) — gitignored;
+# regenerate from a fresh clone via ../circuits/REBUILD.md
 ```
 
 `.env` (at `zeto-hiero/.env`) must have: `HEDERA_OPERATOR_ACCOUNT_ID`,

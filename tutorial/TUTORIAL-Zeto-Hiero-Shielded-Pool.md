@@ -28,7 +28,7 @@ Every native step follows the same shape: **build → (freeze + sign) → execut
 
 - A funded Hedera **testnet** operator account (account ID + ECDSA private key) from the [Hedera Portal](https://portal.hedera.com/).
 - Node.js 20+, and from the repo root: `npm install` then `npx hardhat compile` (compiles the pool + vendored Zeto contracts and produces the artifacts the deploy step reads; requires the `cancun` EVM target already set in `hardhat.config.ts`).
-- Compiled circuits in `circuits/build/` (the proving keys + WASM the proofs are generated against).
+- Compiled circuits in `circuits/build/` (the proving keys + WASM the proofs are generated against). These are gitignored; on a fresh clone, regenerate them via [`../circuits/REBUILD.md`](../circuits/REBUILD.md).
 - Dependencies used here: `@hiero-ledger/sdk`, `hardhat` + `ethers`, `@openzeppelin/hardhat-upgrades`, and the witness helpers (`maci-crypto`, `zeto-js`) wired up in `test/lib/zeto-witness.ts`.
 
 ✅ If you just want the complete code, skip to the [Code Check](#code-check) section.
