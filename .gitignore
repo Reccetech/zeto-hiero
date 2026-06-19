@@ -54,3 +54,7 @@ contracts/generated/*.sol.bak
 circuits/build/
 circuits/ptau/
 tools/bin/
+
+# Local .env backups (may contain live keys) — never commit
+.env.bak
+.env.bak.*

@@ -16,7 +16,8 @@
     "deploy/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
-    "tools/**/*.ts"
+    "tools/**/*.ts",
+    "tutorial/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", "artifacts", "cache", "vendor"]
 }

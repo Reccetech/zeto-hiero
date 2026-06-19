@@ -4,12 +4,14 @@ Zeto privacy pool for Hedera Smart Contract Service. Hyperledger Labs Zeto + Hed
 
 ## Documents
 
-- **Product spec:** [PRD-Zeto-Hiero.md](../Privacy%20Proposal/PRD-Zeto-Hiero.md) — full design (contracts, circuits, SDK, ceremony, operations)
-- **Build plan:** [BUILD-PLAN-Zeto-Hiero.md](../Privacy%20Proposal/BUILD-PLAN-Zeto-Hiero.md) — phase-by-phase implementation checklist
+- **MVP overview:** [MVP-Zeto-Hiero.md](MVP-Zeto-Hiero.md) — architecture, how it works, performance, roadmap
+- **Roadmap:** [ROADMAP.md](ROADMAP.md) · **Release notes:** [RELEASE-NOTES.md](RELEASE-NOTES.md)
+- **Tutorial:** [tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md](tutorial/TUTORIAL-Zeto-Hiero-Shielded-Pool.md) (runnable walkthrough) · [tutorial/HOW-ZETO-WORKS.md](tutorial/HOW-ZETO-WORKS.md) (privacy model)
+- **Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full spec), BUILD-PLAN-Zeto-Hiero.md (production roadmap)
 
 ## Status
 
-Phase 0 — bootstrap (in progress).
+v0.1 (MVP) complete — full shielded deposit/transfer/withdraw on Hedera testnet with real ZK proofs. See [RELEASE-NOTES.md](RELEASE-NOTES.md) and [ROADMAP.md](ROADMAP.md).
 
 ## Quick start
 

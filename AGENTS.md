@@ -7,11 +7,12 @@ You are continuing work on **zeto-hiero**, a privacy-preserving token pool for H
 All live in the parent folder `../` (i.e. `C:/repos/Privacy Proposal/`):
 
 1. **`../MVP-Zeto-Hiero.md`** — architecture, how it works, performance, roadmap. Start here for the big picture.
-2. **`../BUILD-PLAN-MVP-Zeto-Hiero.md`** — the active work checklist (v0.1). The **Status:** line at the top says exactly where we are. Phases are checkbox-tracked.
-3. **`../PRD-Zeto-Hiero.md`** — full production design spec (≈6,000 lines). Reference it via `§` section numbers cited in the build plan; don't read end-to-end.
-4. **`../BUILD-PLAN-Zeto-Hiero.md`** — the full production roadmap (v0.2 → v1.0), for context beyond the MVP.
+2. **`../TUTORIAL-Zeto-Hiero-Shielded-Pool.md`** — standalone Hedera-tutorial-style walkthrough (9 numbered sections, code + console output for each step, layer table, Code Check). Created 2026-06-10.
+3. **`../BUILD-PLAN-MVP-Zeto-Hiero.md`** — the active work checklist (v0.1). The **Status:** line at the top says exactly where we are. Phases are checkbox-tracked.
+4. **`../PRD-Zeto-Hiero.md`** — full production design spec (≈6,000 lines). Reference it via `§` section numbers cited in the build plan; don't read end-to-end.
+5. **`../BUILD-PLAN-Zeto-Hiero.md`** — the full production roadmap (v0.2 → v1.0), for context beyond the MVP.
 
-## Where we are (2026-06-03)
+## Where we are (2026-06-10)
 
 ✅ **MVP v0.1 COMPLETE.** All phases done. ~14 commits on local `main`, **85 tests passing**.
 
