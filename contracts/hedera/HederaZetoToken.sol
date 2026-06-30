@@ -65,9 +65,18 @@ contract HederaZetoToken is Zeto_AnonEncNullifierKyc, ZetoHTSBridge, SanctionsMo
         _entered = false;
     }
 
-    /// @notice One-time Hedera setup: associate the HTS token and wire it as the ERC-20.
+    /// @notice One-time setup for a native **HTS** fungible token: associate it (`0x167`) and wire
+    /// it as the pool's ERC-20.
     function setupHTS(address token) external onlyOwner {
         _associate(token);
+        setERC20(IERC20(token));
+    }
+
+    /// @notice One-time setup for a plain **ERC-20** token (e.g. a vanilla OpenZeppelin token on
+    /// HSCS): wire it as the pool's ERC-20 with no HTS association. The full compliance stack
+    /// (KYC + sanctions + non-repudiation) applies identically — only the custody mechanism differs.
+    function setupERC20(address token) external onlyOwner {
+        _enableErcCustody(token);
         setERC20(IERC20(token));
     }
 

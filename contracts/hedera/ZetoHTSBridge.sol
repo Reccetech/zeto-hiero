@@ -19,9 +19,13 @@ abstract contract ZetoHTSBridge is OwnableUpgradeable {
     IHederaTokenService private constant HTS = IHederaTokenService(address(0x167));
     mapping(address => bool) public htsAssociated;
     mapping(address => uint256) public shieldedSupply;
+    /// @dev Tokens custodied as a plain ERC-20 (not an HTS token) — no `0x167` association needed.
+    /// Lets the same pool back a native HTS fungible token OR a vanilla ERC-20 deployed on HSCS.
+    mapping(address => bool) public ercCustody;
 
     event HTSTokenAssociated(address indexed token);
     event HTSTokenDissociated(address indexed token);
+    event ERC20CustodyEnabled(address indexed token);
 
     /// @dev No-op init; owner is initialized by the composing contract via upstream's
     /// __ZetoCommon_init → __Ownable_init. Present for the `onlyInitializing` discipline.
@@ -76,8 +80,17 @@ abstract contract ZetoHTSBridge is OwnableUpgradeable {
         }
     }
 
+    /// @dev Mark a token as custodied via the plain ERC-20 interface (no HTS association).
+    /// Called by the composing pool's owner-gated ERC-20 setup path.
+    function _enableErcCustody(address tokenAddress) internal {
+        ercCustody[tokenAddress] = true;
+        emit ERC20CustodyEnabled(tokenAddress);
+    }
+
+    /// @dev The deposit custody gate: satisfied by an HTS association OR by ERC-20 custody mode.
     function _requireHTSAssociated(address tokenAddress) internal view {
-        if (!htsAssociated[tokenAddress]) revert TokenNotAssociated(tokenAddress);
+        if (htsAssociated[tokenAddress] || ercCustody[tokenAddress]) return;
+        revert TokenNotAssociated(tokenAddress);
     }
 
     /// @dev Composing contract calls these to maintain the invariant
@@ -90,5 +103,5 @@ abstract contract ZetoHTSBridge is OwnableUpgradeable {
         shieldedSupply[token] -= amount;
     }
 
-    uint256[50] private __gap;
+    uint256[49] private __gap;
 }
