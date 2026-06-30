@@ -15,7 +15,20 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 4. **`PRD-Zeto-Hiero.md`** — full production design spec (≈6,000 lines). Reference by `§` section numbers; don't read end-to-end.
 5. **`BUILD-PLAN-Zeto-Hiero.md`** — the full production roadmap (v0.2 → v1.0).
 
-## Where we are (2026-06-10)
+## Where we are (2026-06-30)
+
+✅ **v0.2 (KYC) COMPLETE.** **103 tests passing.** KYC-gated shielded flow with nullifier double-spend prevention, proven on Hedera testnet with real Groth16 proofs. Key facts (full detail in `../BUILD-PLAN-v0.2-KYC-Zeto-Hiero.md` + `docs/run-results-v0.2-kyc.md`):
+- Pool `HederaZetoTokenKyc` = upstream `Zeto_AnonEncNullifierKyc` + `ZetoHTSBridge`. Overrides internal virtual `_deposit` **and `_withdrawWithNullifiers`** (the nullifier withdraw path).
+- **KYC registry is the *embedded* `Registry` base**, not the standalone `HederaKycRegistry`. Enroll via owner-only `pool.register(pubKey, data)`; current root = `getIdentitiesRoot()`. `initialize` is the unchanged 4-arg form.
+- Variant links `PoseidonUnit2L`/`PoseidonUnit3L` (circomlibjs bytecode) + `SmtLib` — deploy via `test/lib/poseidon-deploy.ts`. `@iden3/contracts` installed from the git fork `kaleido-io/contracts#keccak256`.
+- Circuits `anon_enc_nullifier_kyc` (transfer, 19 signals) + `withdraw_nullifier` (7 signals) needed **2¹⁸ ptau** (not 2¹⁶ — ~118k constraints). Own-setup verifiers `AnonEncNullifierKycVerifierMVP` / `WithdrawNullifierVerifierMVP`. Deposit circuit unchanged from v0.1.
+- KYC witness tooling in `test/lib/zeto-witness-kyc.ts` (off-chain SMTs via `@iden3/js-merkletree`, kept in lock-step with on-chain trees). Real-proof e2e in `test/kyc-real-proof.test.ts`. Demo: `scripts/demo-v02-kyc-testnet.ts`. Testnet pool `0xed8661D592A88A81382996ea17e4323bA64Df8df`.
+
+**Next increment: v0.3 — sanctions screening** (ZK non-inclusion vs an OFAC SDN commitment, using the v0.1 `SanctionsModule`; needs a custom circuit — see Phase 3 of `../BUILD-PLAN-Zeto-Hiero.md`).
+
+---
+
+### Prior milestone — MVP v0.1 (2026-06-10)
 
 ✅ **MVP v0.1 COMPLETE.** All phases done. ~14 commits on local `main`, **85 tests passing**.
 
@@ -23,14 +36,16 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 - **Full shielded flow proven on Hedera testnet** with a real HTS token: deposit → private transfer → withdraw, balances reconcile (Alice 900 + Bob 40 + pool 60 == 1000). Gas: deposit 325,347 · transfer 415,954 · withdraw 330,392 · setupHTS 783,314. See `scripts/demo-mvp-testnet.ts` + `scripts/phase6-create-token.ts`; HashScan links in `docs/overview.md` §6.1 (and the internal `BUILD-PLAN-MVP-Zeto-Hiero.md` Phase 6).
 - Transfer-witness tooling lives in `test/lib/zeto-witness.ts` (uses `maci-crypto` + `zeto-js`; proofs via `snarkjs.groth16.fullProve` against `circuits/build/`). `maci-crypto` 1.1.1 builds + loads fine on Windows — the native-dep worry didn't materialize.
 
-## Your next task (v0.2 — KYC)
+## Your next task (v0.3 — sanctions screening)
 
-v0.1 is shipped. The next increment is **v0.2 — KYC enforcement** (see `../BUILD-PLAN-Zeto-Hiero.md`):
+v0.2 is shipped. The next increment is **v0.3 — sanctions screening** (see Phase 3 of `../BUILD-PLAN-Zeto-Hiero.md`):
 
-- Swap `Zeto_AnonEnc` → `Zeto_AnonEncNullifierKyc` (the KYC variant adds a nullifier SMT + identity-membership signals — this pulls in `@iden3/contracts` for `SmtLib`/Poseidon, which v0.1 deliberately skipped).
-- Wire in the existing `HederaKycRegistry` (UUPS, already built + tested).
-- Extend `test/lib/zeto-witness.ts` for the KYC circuit's witness (nullifiers, merkle proofs, KYC membership). Compile the `anon_enc_nullifier_kyc` circuit (needs 2¹⁶ ptau — already on disk) and stage its verifier the same way we did the v0.1 ones.
-- Enroll Alice & Bob, then re-run a demo with KYC active.
+- Add a ZK **non-inclusion** proof: prove a transfer's owners are NOT in an OFAC SDN commitment (a sanctions SMT), without revealing which addresses were checked.
+- Wire in the existing `SanctionsModule` (built + tested in v0.1, not yet active).
+- This needs a **custom circuit** — the upstream `anon_enc_nullifier_kyc` circuit extended with a sanctions non-inclusion signal (upstream has no such variant). Compile + own-setup + stage its verifier the same way as v0.2 (2¹⁸ ptau).
+- Extend `test/lib/zeto-witness-kyc.ts` with the sanctions SMT + non-inclusion path generation.
+
+A clean reference for the KYC build (what worked, the gotchas) is `../BUILD-PLAN-v0.2-KYC-Zeto-Hiero.md` — read its "Key findings" section first.
 
 ## Environment (same machine, already set up)
 

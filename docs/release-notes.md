@@ -7,6 +7,75 @@ contracts, tooling, and docs *on top* of it.
 
 ---
 
+## v0.2.0 — KYC enforcement (2026-06-30)
+
+Adds KYC identity enforcement and nullifier-based double-spend prevention on top of the v0.1 pool,
+proven end-to-end on Hedera testnet with real Groth16 proofs. v0.1 contracts and flow are unchanged
+and remain available.
+
+### Baseline (upstream)
+- Same submodule: Hyperledger Labs Zeto **v0.2.2** at `vendor/zeto`, consumed unchanged.
+- v0.2 composes with a **different upstream variant**: `Zeto_AnonEncNullifierKyc` (anonymity + ECDH +
+  nullifier SMT + an embedded on-chain KYC identity registry).
+- Added dependency **`@iden3/contracts`** at the exact upstream-pinned git fork
+  (`kaleido-io/contracts#keccak256`) — provides `SmtLib` + the `PoseidonUnit{2,3}L` libraries.
+
+### What we added on top of upstream
+- **`contracts/hedera/HederaZetoTokenKyc.sol`** — the v0.2 pool. Inherits `Zeto_AnonEncNullifierKyc` +
+  `ZetoHTSBridge`; overrides the internal virtual `_deposit` and **`_withdrawWithNullifiers`** (the
+  nullifier withdraw path) for HTS association + shielded-supply tracking. 16.2 KB (under the 24 KB
+  EIP-170 limit). The KYC identity registry is the **inherited `Registry` base** — enrollment is the
+  owner-only `register(pubKey, data)`; there is no separate registry contract.
+- **`contracts/verifiers/AnonEncNullifierKycVerifierMVP.sol`** (KYC transfer, 19 public signals) and
+  **`WithdrawNullifierVerifierMVP.sol`** (nullifier withdraw, 7 public signals) — generated from our own
+  trusted setup, renamed + pragma-bumped, same convention as v0.1.
+- **Circuits:** compiled `anon_enc_nullifier_kyc` and `withdraw_nullifier` — both required **2¹⁸ ptau**
+  (the KYC transfer is ~118k constraints; the original plan's 2¹⁶ assumption was wrong). The deposit
+  circuit is unchanged from v0.1.
+- **`test/lib/poseidon-deploy.ts`** — deploys + links `PoseidonUnit2L`/`PoseidonUnit3L` (circomlibjs
+  bytecode) and `SmtLib` for the KYC variant.
+- **`test/lib/zeto-witness-kyc.ts`** — KYC witness helpers: `newNullifier`, off-chain UTXO + identity
+  SMTs (`@iden3/js-merkletree`) kept in lock-step with the on-chain trees, `prepareKycTransferProof`,
+  `prepareKycWithdrawProof`, and `decryptNote`.
+- **`scripts/demo-v02-kyc-testnet.ts`** — the consolidated testnet demo (deploy → register → deposit →
+  transfer → withdraw).
+
+### Tests
+- +18 tests over v0.1 (**103 total**): KYC variant smoke, Poseidon/SmtLib linking (on-chain Poseidon
+  matches off-chain zeto-js), KYC verifier deploy, KYC pool integration (registry, deposit, **nullifier
+  double-spend revert**, UUPS auth), and a **real-proof KYC end-to-end** (deposit → transfer → withdraw
+  → double-spend) asserting off-chain SMT roots equal on-chain roots.
+- `MockGroth16Verifier` extended with `[7]` and `[19]` overloads for the KYC path.
+
+### Verified on Hedera testnet
+Full **KYC enrollment → deposit → private transfer → withdraw** with real proofs. Pool
+`0xed8661D592A88A81382996ea17e4323bA64Df8df`. Representative gas (higher than v0.1 — each op now does
+on-chain SMT insertions + a larger proof):
+
+| Operation | v0.2 gas | v0.1 gas |
+|---|---|---|
+| register (Alice / Bob) | 341,515 / 705,538 | — |
+| deposit | 652,175 | 325,347 |
+| transfer | 1,751,073 | 415,930 |
+| withdraw | 1,009,179 | 330,404 |
+
+See `run-results-v0.2-kyc.md` for the full run with HashScan links.
+
+### Intentional deltas / notes
+- **No separate `HederaKycRegistry`** (built in v0.1) is wired in — the KYC variant embeds its own
+  `Registry`. The standalone registry remains for a future design that delegates to an external registry.
+- Upstream's `_register` duplicate-check is ineffective (checks a different SMT key than `isRegistered`);
+  re-registering a key doesn't revert. Not a v0.2 blocker; flagged for upstream contribute-back.
+- Batch verifiers are passed as a mock placeholder (the 2-in/2-out demo never invokes them).
+- Still **single-party (toy) trusted setup**; the multi-party ceremony remains a v1.0 gate.
+- Deferred to later versions: sanctions screening (v0.3), viewing-key scanner (v0.3), non-repudiation /
+  DeRec (v0.4), pause, batch flows.
+
+### Next: v0.3 — Sanctions screening
+ZK non-inclusion proof against an OFAC SDN commitment, using the `SanctionsModule` already built in v0.1.
+
+---
+
 ## v0.1.0 — MVP (2026-06-18)
 
 First tagged version. A working privacy-preserving shielded token pool on Hedera, proven end-to-end

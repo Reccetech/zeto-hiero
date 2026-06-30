@@ -27,11 +27,31 @@ contract MockGroth16Verifier {
         return true;
     }
 
+    // v0.2 KYC path: nullifier withdraw public signals [7]
+    function verifyProof(
+        uint256[2] calldata,
+        uint256[2][2] calldata,
+        uint256[2] calldata,
+        uint256[7] calldata
+    ) external pure returns (bool) {
+        return true;
+    }
+
     function verifyProof(
         uint256[2] calldata,
         uint256[2][2] calldata,
         uint256[2] calldata,
         uint256[15] calldata
+    ) external pure returns (bool) {
+        return true;
+    }
+
+    // v0.2 KYC path: anon_enc_nullifier_kyc transfer public signals [19]
+    function verifyProof(
+        uint256[2] calldata,
+        uint256[2][2] calldata,
+        uint256[2] calldata,
+        uint256[19] calldata
     ) external pure returns (bool) {
         return true;
     }
