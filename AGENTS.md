@@ -17,6 +17,21 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 
 ## Where we are (2026-06-30)
 
+✅ **v0.4 (CONFIDENTIAL / NON-REPUDIATION) COMPLETE — feature set done.** **128 tests passing.** Production pool with KYC + sanctions + authority-decryptable transfers, viewing-key SDK + scanners, DeRec-style key custody, HCS audit trail. Proven on testnet with real proofs incl. SDK scanners on real on-chain data. Full detail: `../BUILD-PLAN-v0.4-to-v1.0-Zeto-Hiero.md` + `docs/run-results-v0.4-confidential.md`.
+- Pool `HederaZetoToken` = KYC+sanctions+NR. `transferConfidential` (38 public signals); authority key stored on-chain + bound into the proof, `AuthorityCiphertext` event. Pause + reentrancy mutex. Testnet pool `0x865e9306DEb38b9Ea1E79b4c08e806D0C4DA3E1d`, HCS topic `0.0.9377751`.
+- Authored circuit `anon_enc_nullifier_kyc_sanctions_non_repudiation` (2¹⁹ ptau, verifier uint[38]). `authorityPublicKey` is a PUBLIC INPUT (not baked in) → rotatable without re-ceremony (deviates from PRD F-1). Value-range is a no-op (check-positive already GreaterEqThan(100)).
+- `sdk/`: OutputScanner, AuthorityAuditScanner, SanctionsPathBuilder, ViewingKey, AuthorityKeyManager (field-Shamir — DeRec lib unavailable), HCS taxonomy/poster. Witness `test/lib/zeto-witness-nr.ts`; real-proof e2e `test/nr-real-proof.test.ts`; demo `scripts/demo-v04-confidential-testnet.ts`.
+
+**🔴 v1.0 — NOT done; requires humans/authorization (do NOT attempt to fake):**
+- **Multi-party trusted setup ceremony** (`docs/ceremony.md`, `scripts/ceremony-contribute.ts`) — needs ≥10 independent contributors over months. All current verifiers are single-party TOY setups (testnet-only).
+- **Third-party security audit** — `test/invariants.test.ts` feeds it; it does not replace it.
+- **Mainnet launch** — gated by `scripts/mainnet-launch.ts` (refuses unless ceremony+audit+Besu≥25.3.0+explicit confirm). See `docs/operator-runbook.md` §Mainnet.
+The codeable v1.0 scaffolding (invariant tests, ceremony tooling+docs, gated mainnet script, runbook) is built and committed.
+
+---
+
+### Prior milestone — v0.3 (SANCTIONS) (2026-06-30)
+
 ✅ **v0.3 (SANCTIONS) COMPLETE.** **110 tests passing.** Adds ZK sanctions non-inclusion (PPOI) on top of v0.2, proven on Hedera testnet with real proofs. Key facts (full detail in `../BUILD-PLAN-v0.3-Sanctions-Zeto-Hiero.md` + `docs/run-results-v0.3-sanctions.md`):
 - Pool `HederaZetoTokenKycSanctions` = `Zeto_AnonEncNullifierKyc` + `ZetoHTSBridge` + `SanctionsModule`. New `transferScreened(...)` (the inherited 19-signal `transfer` is unusable — the `_verifier` slot holds the 20-signal sanctions verifier). Appends `uint256(sanctionsMerkleRoot)` as public input #20; `_requireCurrentSanctionsRoot` gives a fast revert on stale root.
 - **Authored circuit** `circuits/sources/anon_enc_nullifier_kyc_sanctions.circom` (no upstream equivalent): KYC base + per-input `SMTVerifier(fnc=1)` non-inclusion. **`fnc=1` = non-membership** (the PRD says fnc=0 — it's wrong; confirmed empirically). `sanctionsRoot` declared **last** so it appends as public signal #20 (snarkjs orders public signals as [outputs, then inputs by declaration order]). ~191k constraints → **2¹⁹ ptau**. Verifier `AnonEncNullifierKycSanctionsVerifierMVP` (`uint[20]`).
@@ -49,16 +64,16 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 - **Full shielded flow proven on Hedera testnet** with a real HTS token: deposit → private transfer → withdraw, balances reconcile (Alice 900 + Bob 40 + pool 60 == 1000). Gas: deposit 325,347 · transfer 415,954 · withdraw 330,392 · setupHTS 783,314. See `scripts/demo-mvp-testnet.ts` + `scripts/phase6-create-token.ts`; HashScan links in `docs/overview.md` §6.1 (and the internal `BUILD-PLAN-MVP-Zeto-Hiero.md` Phase 6).
 - Transfer-witness tooling lives in `test/lib/zeto-witness.ts` (uses `maci-crypto` + `zeto-js`; proofs via `snarkjs.groth16.fullProve` against `circuits/build/`). `maci-crypto` 1.1.1 builds + loads fine on Windows — the native-dep worry didn't materialize.
 
-## Your next task (v0.4 — non-repudiation + authority custody + HCS audit)
+## Your next task — v1.0 (external gates; do NOT fake)
 
-v0.3 is shipped. The next increment is **v0.4** (see Phases 3 + 7 of `../BUILD-PLAN-Zeto-Hiero.md`):
+The feature set (v0.1–v0.4) is complete. What remains is **v1.0 production hardening**, which is mostly NOT coding — it needs humans, external parties, and explicit authorization:
 
-- Add **authority BJJ encryption** of output values so a designated authority can decrypt for audit (non-repudiation). The authority public key is a circuit parameter — must be fixed before any ceremony.
-- **DeRec-style key custody** for the authority key.
-- **HCS audit-trail topic** + event taxonomy.
-- This upgrades the circuit to the full PRD production circuit `anon_enc_nullifier_kyc_sanctions_non_repudiation` (extends the v0.3 `anon_enc_nullifier_kyc_sanctions.circom` with the authority-encryption block). Likely 2¹⁹ ptau again or larger.
+1. **Third-party security audit** — engage an external ZK/Solidity auditor. Feed them `test/invariants.test.ts` + the contracts. Resolve findings. (Do this BEFORE the ceremony freeze.)
+2. **Multi-party trusted setup ceremony** — recruit ≥10 independent contributors; run the Phase-2 MPC per `docs/ceremony.md` using `scripts/ceremony-contribute.ts`; deploy the ceremony-produced verifiers. All current verifiers are single-party TOY setups.
+3. **Packaged SDK (Phase 8)** — finish `HieroZetoClient` (deposit/transfer/withdraw end-to-end), `HederaProvider`, key manager; publish `@hiero-privacy/zeto-sdk`. (The scanners + custody + HCS modules already exist under `sdk/`.)
+4. **Mainnet launch** — only when ceremony + audit are done AND Besu ≥ 25.3.0 is live on mainnet. Gated by `scripts/mainnet-launch.ts`; follow `docs/operator-runbook.md` §Mainnet. This is irreversible + outward-facing — get explicit human go-ahead.
 
-Clean references for prior builds (read their "Key findings" / "Build progress" sections first): `../BUILD-PLAN-v0.2-KYC-Zeto-Hiero.md` and `../BUILD-PLAN-v0.3-Sanctions-Zeto-Hiero.md`.
+References (read their "Build progress" sections): `../BUILD-PLAN-v0.4-to-v1.0-Zeto-Hiero.md` (the remaining-work master plan), plus the v0.2/v0.3 plans.
 
 ## Environment (same machine, already set up)
 

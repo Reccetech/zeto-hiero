@@ -8,16 +8,21 @@ All prose lives in [`docs/`](docs/):
 
 - **Overview:** [docs/overview.md](docs/overview.md) — architecture, how it works (incl. the privacy model in §2), performance, roadmap
 - **Tutorial:** [docs/tutorial.md](docs/tutorial.md) — transaction-by-transaction walkthrough (runnable scripts in [`examples/walkthrough/`](examples/walkthrough/))
-- **Run results:** [docs/run-results.md](docs/run-results.md) (v0.1) · [docs/run-results-v0.2-kyc.md](docs/run-results-v0.2-kyc.md) (v0.2 KYC) · [docs/run-results-v0.3-sanctions.md](docs/run-results-v0.3-sanctions.md) (v0.3 sanctions) — captured testnet runs (entities, HashScan links, gas, fees)
+- **Run results:** [v0.1](docs/run-results.md) · [v0.2 KYC](docs/run-results-v0.2-kyc.md) · [v0.3 sanctions](docs/run-results-v0.3-sanctions.md) · [v0.4 confidential](docs/run-results-v0.4-confidential.md) — captured testnet runs (entities, HashScan links, gas, fees)
+- **Operator runbook:** [docs/operator-runbook.md](docs/operator-runbook.md) — deploy, enroll, rotate sanctions/authority keys, pause, upgrade, mainnet gates
+- **Ceremony:** [docs/ceremony.md](docs/ceremony.md) — the v1.0 multi-party trusted-setup process (not yet run)
 - **Rebuild circuits:** [docs/rebuild-circuits.md](docs/rebuild-circuits.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
 - **Release notes:** [docs/release-notes.md](docs/release-notes.md)
 - **Privacy strategy:** [docs/privacy-strategy.md](docs/privacy-strategy.md) — proposed Hedera privacy approach and how this project fits
 
 ## Status
 
-**v0.3 (sanctions) complete** — KYC-gated shielded transfers with a ZK sanctions non-inclusion proof
-(PPOI equivalent) and nullifier double-spend prevention, proven on Hedera testnet with real ZK proofs.
-v0.1 (MVP) and v0.2 (KYC) remain available. See [docs/release-notes.md](docs/release-notes.md).
+**v0.4 (confidential / non-repudiation) complete** — feature-complete pool: KYC + sanctions +
+authority-decryptable transfers (regulator audit), with a viewing-key SDK + scanners, DeRec-style
+authority-key custody, and an HCS audit trail. Proven on Hedera testnet with real ZK proofs. v0.1–v0.3
+remain available. **v1.0 (ceremony + audit + mainnet) is staged but not executed** — it requires a
+multi-party trusted setup, a third-party audit, and Besu ≥ 25.3.0 on mainnet. See
+[docs/release-notes.md](docs/release-notes.md).
 
 ## Quick start
 
@@ -37,9 +42,10 @@ npm test
 | Path | Purpose |
 |---|---|
 | `docs/` | All prose: overview, tutorial, run-results, rebuild-circuits, release-notes, privacy-strategy |
-| `contracts/hedera/` | Hedera-specific Solidity (v0.1 `HederaZetoTokenLite`, v0.2 `HederaZetoTokenKyc`, v0.3 `HederaZetoTokenKycSanctions`, HTS bridge, KYC registry, sanctions module, vkey-setter) |
-| `contracts/verifiers/` | Generated Groth16 verifiers (v0.1: Deposit/AnonEnc/Withdraw; v0.2: AnonEncNullifierKyc/WithdrawNullifier; v0.3: AnonEncNullifierKycSanctions) |
-| `circuits/sources/` | Authored circuits (v0.3 `anon_enc_nullifier_kyc_sanctions.circom`) |
+| `contracts/hedera/` | Hedera Solidity: pools `HederaZetoTokenLite` (v0.1) → `HederaZetoTokenKyc` (v0.2) → `HederaZetoTokenKycSanctions` (v0.3) → `HederaZetoToken` (v0.4, production), + HTS bridge, KYC registry, sanctions module, vkey-setter |
+| `contracts/verifiers/` | Generated Groth16 verifiers (deposit, anon_enc, withdraw, KYC, sanctions, and the v0.4 non-repudiation transfer) |
+| `circuits/sources/` | Authored circuits (v0.3 sanctions, v0.4 `anon_enc_nullifier_kyc_sanctions_non_repudiation`) |
+| `sdk/` | `@hiero-privacy/zeto-sdk` — scanners (recipient + authority audit), sanctions path builder, authority-key custody (Shamir), HCS audit codec |
 | `contracts/test/` | Test-only mocks + harness contracts |
 | `circuits/` | Circuit build artifacts (`build/`, `ptau/`) — gitignored; regenerate via `docs/rebuild-circuits.md` |
 | `deploy/` | hardhat-deploy scripts (verifiers, vkey-setter, lite-pool) |

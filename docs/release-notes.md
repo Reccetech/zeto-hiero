@@ -7,6 +7,55 @@ contracts, tooling, and docs *on top* of it.
 
 ---
 
+## v0.4.0 — Non-repudiation + selective disclosure + audit trail (2026-06-30)
+
+Feature-complete confidential pool. Adds an authority-decryptable layer (non-repudiation), the
+viewing-key SDK + scanners, DeRec-style authority-key custody, and an HCS audit trail on top of v0.3.
+Proven end-to-end on Hedera testnet with real proofs, including the SDK scanners against real on-chain data.
+
+### Circuits + pool
+- **Authored** `circuits/sources/anon_enc_nullifier_kyc_sanctions_non_repudiation.circom` — the v0.3
+  sanctions circuit + an authority ECDH `SymmetricEncrypt` of all secrets (`cipherTextAuthority[16]`).
+  ~198k constraints → **2¹⁹ ptau**. `authorityPublicKey` is a circuit **public input** (per upstream NR),
+  not baked into the verifying key — so the key can rotate without re-ceremony (deviates from PRD F-1).
+  Verifier `AnonEncNullifierKycSanctionsNRVerifierMVP` (uint[38]).
+- **`HederaZetoToken`** (18.9 KB) — production pool: KYC + sanctions + non-repudiation, stored
+  `authorityPublicKey`, pause + reentrancy mutex. `transferConfidential` builds the 38 public signals,
+  binds the authority key + sanctions root from state, emits `AuthorityCiphertext`.
+
+### SDK (`sdk/`)
+- `OutputScanner` (recipient note discovery via ECDH trial-decrypt), `AuthorityAuditScanner` (regulator
+  full-ledger reconstruction from the authority ciphertext), `SanctionsPathBuilder`, `ViewingKey`.
+  Note: in Zeto's anon_enc crypto the recipient's BJJ key *is* the viewing key; pool-level audit is the
+  authority key.
+
+### Authority-key custody + HCS audit
+- `AuthorityKeyManager` — DeRec was unavailable, so custody uses **field-Shamir** over the BN254 scalar
+  field (`sdk/src/authority/shamir.ts`): generate → split T-of-N → distribute (pluggable Helper
+  encryption) → reconstruct; `sk_auth` is never returned whole.
+- HCS audit taxonomy (10 F-7 event types) + codec + poster/listener; `scripts/create-hcs-topic.ts`
+  creates a topic with a 3-of-5 Helper threshold submit key.
+
+### Tests + testnet
+- **128 tests** (+11): NR pool unit, NR real-proof e2e (authority reconstructs the plaintext), SDK
+  scanners against a real proof, Shamir custody, HCS taxonomy, and shielded-supply invariants. Mock
+  verifier gained a `[38]` overload.
+- Testnet: pool `0x865e9306DEb38b9Ea1E79b4c08e806D0C4DA3E1d`, HCS topic `0.0.9377751`. Confidential
+  transfer ~1.89M gas (+~19% over v0.3 for the 16-element authority ciphertext). See
+  `run-results-v0.4-confidential.md`.
+
+### v1.0 scaffolding (staged, not executed)
+- `test/invariants.test.ts` (Hardhat property tests — Foundry unavailable), `scripts/ceremony-contribute.ts`
+  + `docs/ceremony.md`, gated `scripts/mainnet-launch.ts`, `docs/operator-runbook.md`.
+- **Still required for mainnet (human/external):** multi-party trusted setup ceremony, third-party
+  security audit, Besu ≥ 25.3.0 on mainnet. The pool still uses single-party (toy) verifiers.
+
+### Value-range note
+This Zeto version's `check-positive` uses `GreaterEqThan(100)`, already past the 64-bit institutional
+need — the PRD's `Num2Bits(40)→64` task is a no-op here.
+
+---
+
 ## v0.3.0 — Sanctions screening (2026-06-30)
 
 Adds ZK **sanctions screening** (PPOI equivalent) on top of v0.2: every screened transfer proves — in zero knowledge — that each spent nullifier is **not** on a sanctions list, without revealing which entries were checked. Proven end-to-end on Hedera testnet with real Groth16 proofs. v0.1/v0.2 contracts and flows remain available.
