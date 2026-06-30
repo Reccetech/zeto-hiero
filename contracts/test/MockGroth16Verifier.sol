@@ -65,4 +65,14 @@ contract MockGroth16Verifier {
     ) external pure returns (bool) {
         return true;
     }
+
+    // v0.4 KYC+sanctions+non-repudiation transfer public signals [38]
+    function verifyProof(
+        uint256[2] calldata,
+        uint256[2][2] calldata,
+        uint256[2] calldata,
+        uint256[38] calldata
+    ) external pure returns (bool) {
+        return true;
+    }
 }
