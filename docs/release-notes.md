@@ -7,6 +7,30 @@ contracts, tooling, and docs *on top* of it.
 
 ---
 
+## v0.5.0 — Multi-asset support (2026-06-30)
+
+Covers all four asset classes — **HTS FT, ERC-20 FT, HTS NFT, ERC-721 NFT** — proven on Hedera testnet with real ZK proofs.
+
+### Fungible: ERC-20 custody
+- `ZetoHTSBridge` gains an **ERC-20 custody mode** (no HTS association). `HederaZetoToken.setupERC20(token)` shields a plain ERC-20 (a vanilla OpenZeppelin token on HSCS) with the **full v0.4 compliance stack unchanged** (KYC + sanctions + non-repudiation). The same pool still does HTS FT via `setupHTS`.
+- The custody gate (`_requireHTSAssociated`) now passes for HTS-associated **or** ERC-custody tokens.
+
+### Non-fungible: shielded NFT pool
+- **`HederaZetoNFT`** = upstream `Zeto_NfAnonNullifier` + new `ZetoNFTBridge`. Custodies a real NFT via the **ERC-721 interface** — which both a plain ERC-721 *and* an HTS NFT expose at their EVM address; the only HTS difference is association. `setupERC721` / `setupHTSNFT`; `depositNFT` (custody + mint shielded note) / `transfer` (private, nullifier) / `withdrawNFT` (spend note + release real NFT). Pause switch included. 12.2 KB.
+- **Circuit:** compiled upstream `nf_anon_nullifier_transfer` (2¹⁸ ptau) → `NfAnonNullifierTransferVerifierMVP` (uint[3]). NFT note = `Poseidon5(tokenId, uriHash, salt, ownerPubKey)`; nullifier = `Poseidon4(...)`.
+- **Compliance scope:** basic shielding (anonymity + double-spend) — upstream has no NFT KYC/sanctions/non-repudiation circuits. Honest limit: the private transfer is fully ZK-trustless; the tokenId↔note custody binding at withdraw is operator/caller-asserted in this basic tier.
+
+### Tooling + tests
+- `test/lib/zeto-witness-nf.ts` (NFT witness), `MockERC721`, demo scripts `demo-erc20-ft-testnet.ts` + `demo-nft-testnet.ts`, and `docs/tutorials-multi-asset.md` (one section per asset class).
+- **+8 tests (136 total):** ERC-20 FT pool (no `0x167` precompile) + NFT pool incl. a real-proof deposit → private transfer → withdraw of an ERC-721.
+
+### Verified on Hedera testnet
+- **ERC-20 FT:** pool `0x7edd8DcD…3eF7`; deposit 668,948 / confidential transfer 2,136,560 gas; authority audit reconstructed input=100, outputs=[40,60].
+- **ERC-721 NFT:** pool `0x440b01eA…42D0`; deposit 459,210 / private transfer 914,432 / withdraw 789,593 gas; the real NFT moved Alice → (shielded) → Bob.
+- See `run-results-v0.5-multi-asset.md`.
+
+---
+
 ## v0.4.0 — Non-repudiation + selective disclosure + audit trail (2026-06-30)
 
 Feature-complete confidential pool. Adds an authority-decryptable layer (non-repudiation), the

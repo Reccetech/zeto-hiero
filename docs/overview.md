@@ -1,6 +1,6 @@
 # Zeto-Hiero — Architecture, Tutorial, Performance, Roadmap
 
-**Status:** ✅ **Feature set complete (v0.1 → v0.4).** Shielded HTS deposit/transfer/withdraw with KYC enforcement, ZK sanctions screening, and authority-decryptable (non-repudiation) transfers — all proven on Hedera testnet with a real HTS token and real ZK proofs. **128 tests passing.** Production launch (v1.0) is gated on a multi-party trusted-setup ceremony, a third-party audit, and a Besu mainnet upgrade.
+**Status:** ✅ **Feature set complete (v0.1 → v0.5).** Shielded deposit/transfer/withdraw with KYC enforcement, ZK sanctions screening, and authority-decryptable (non-repudiation) transfers, across **all four asset classes — HTS FT, ERC-20 FT, HTS NFT, ERC-721 NFT** — proven on Hedera testnet with real ZK proofs. **136 tests passing.** Production launch (v1.0) is gated on a multi-party trusted-setup ceremony, a third-party audit, and a Besu mainnet upgrade.
 **Repo:** github.com/Reccetech/zeto-hiero (public)
 **In this repo:** [release-notes.md](release-notes.md) · [tutorial.md](tutorial.md) · [../examples/walkthrough/](../examples/walkthrough/) (runnable v0.1 walkthrough) · run results for [v0.1](run-results.md) / [v0.2](run-results-v0.2-kyc.md) / [v0.3](run-results-v0.3-sanctions.md) / [v0.4](run-results-v0.4-confidential.md) · [operator-runbook.md](operator-runbook.md) · [ceremony.md](ceremony.md) · the privacy model is §2, the version roadmap is §7
 **Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full product spec) · BUILD-PLAN-Zeto-Hiero.md + the per-version build plans (v0.2 KYC, v0.3 sanctions, v0.4→v1.0)
@@ -16,7 +16,11 @@ Zeto-Hiero is a **privacy-preserving token pool** for Hedera. It lets institutio
 
 It is a Hedera deployment of **[Zeto](https://github.com/hyperledger-labs/zeto)** — the Hyperledger Labs zero-knowledge UTXO token toolkit (Apache 2.0, by Kaleido) — combined with Hedera-specific contracts that bridge to the Hedera Token Service (HTS).
 
-> **Supported assets — fungible tokens (FT) today; NFTs are a future increment.** Every pool here (v0.1–v0.4) shields a **fungible** token. On Hedera the underlying asset is a native **HTS fungible token**, which the pool custodies through its ERC-20 interface (HTS fungible tokens expose ERC-20 at their EVM address) — so an **ERC-20**-style FT is exactly what's covered. **ERC-721 / HTS NFTs are not built in zeto-hiero yet.** Upstream Zeto *does* provide non-fungible variants (`Zeto_NfAnon`, `Zeto_NfAnonNullifier`, with the commitment binding a `tokenId` + URI), so a shielded-NFT pool is a feasible future increment (HTS-NFT custody + the `nf_*` circuits) — it simply hasn't been adapted for Hedera in this work.
+> **Supported assets — all four classes (as of v0.5).** Both **fungible** and **non-fungible** tokens are shielded, in both their **HTS** and plain **ERC** forms:
+> - **HTS FT** and **ERC-20 FT** → `HederaZetoToken` (the full v0.4 compliance pool). `setupHTS(token)` associates a native HTS token; `setupERC20(token)` wires a plain ERC-20 with no association. Same KYC + sanctions + non-repudiation stack either way.
+> - **HTS NFT** and **ERC-721 NFT** → `HederaZetoNFT` (upstream `Zeto_NfAnonNullifier` + custody bridge). `setupHTSNFT(token)` / `setupERC721(token)`. Basic shielding (anonymity + nullifier double-spend) — upstream has no NFT compliance circuits.
+>
+> The unifying insight: on Hedera an HTS FT exposes an **ERC-20** interface and an HTS NFT exposes an **ERC-721** interface at their EVM address, so custody is always `transferFrom`/`transfer` — the *only* HTS-specific step is token association. See [tutorials-multi-asset.md](tutorials-multi-asset.md) and [run-results-v0.5-multi-asset.md](run-results-v0.5-multi-asset.md).
 
 **The MVP (v0.1)** is the smallest version that proves the concept end-to-end on Hedera:
 
@@ -378,6 +382,7 @@ Each version added **one** capability, so complexity grew incrementally and ever
 | **v0.2** | KYC enforcement — `Zeto_AnonEncNullifierKyc` + nullifier SMT; only registered BabyJubJub identities can transact | ✅ **Complete** — `HederaZetoTokenKyc`; KYC + double-spend prevention proven on testnet ([run](run-results-v0.2-kyc.md)) |
 | **v0.3** | Sanctions screening — authored `anon_enc_nullifier_kyc_sanctions` circuit + `SanctionsModule`; per-spend ZK non-inclusion (PPOI) | ✅ **Complete** — `HederaZetoTokenKycSanctions`; sanctioned spend can't produce a proof ([run](run-results-v0.3-sanctions.md)) |
 | **v0.4** | Non-repudiation (authority-decryptable transfers) + viewing-key SDK & scanners + DeRec-style authority-key custody + HCS audit trail | ✅ **Complete** — `HederaZetoToken` (production pool); regulator reconstructs the full ledger from the authority ciphertext ([run](run-results-v0.4-confidential.md)) |
+| **v0.5** | Multi-asset — ERC-20 FT custody + shielded NFT pool (HTS NFT + ERC-721); all four asset classes | ✅ **Complete** — `HederaZetoToken.setupERC20` (full compliance on a plain ERC-20) + `HederaZetoNFT` (basic shielding); both proven on testnet ([run](run-results-v0.5-multi-asset.md)) |
 | **v1.0** | Production hardening — multi-party trusted-setup ceremony (replaces single-party test keys), third-party security audit, mainnet launch | ⏳ **Staged, not executed** — codeable parts done (invariant tests, ceremony tooling, gated launch script, runbook); gated on the items below |
 
 ### Compliance posture (delivered across v0.2–v0.4)

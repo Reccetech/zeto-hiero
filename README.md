@@ -7,8 +7,9 @@ Zeto privacy pool for Hedera Smart Contract Service. Hyperledger Labs Zeto + Hed
 All prose lives in [`docs/`](docs/):
 
 - **Overview:** [docs/overview.md](docs/overview.md) — architecture, how it works (incl. the privacy model in §2), performance, roadmap
-- **Tutorial:** [docs/tutorial.md](docs/tutorial.md) — transaction-by-transaction walkthrough (runnable scripts in [`examples/walkthrough/`](examples/walkthrough/))
-- **Run results:** [v0.1](docs/run-results.md) · [v0.2 KYC](docs/run-results-v0.2-kyc.md) · [v0.3 sanctions](docs/run-results-v0.3-sanctions.md) · [v0.4 confidential](docs/run-results-v0.4-confidential.md) — captured testnet runs (entities, HashScan links, gas, fees)
+- **Tutorial:** [docs/tutorial.md](docs/tutorial.md) — transaction-by-transaction HTS-FT walkthrough (runnable scripts in [`examples/walkthrough/`](examples/walkthrough/))
+- **Multi-asset tutorials:** [docs/tutorials-multi-asset.md](docs/tutorials-multi-asset.md) — shielding each asset type: HTS FT, ERC-20 FT, HTS NFT, ERC-721 NFT
+- **Run results:** [v0.1](docs/run-results.md) · [v0.2 KYC](docs/run-results-v0.2-kyc.md) · [v0.3 sanctions](docs/run-results-v0.3-sanctions.md) · [v0.4 confidential](docs/run-results-v0.4-confidential.md) · [v0.5 multi-asset](docs/run-results-v0.5-multi-asset.md) — captured testnet runs (entities, HashScan links, gas, fees)
 - **Operator runbook:** [docs/operator-runbook.md](docs/operator-runbook.md) — deploy, enroll, rotate sanctions/authority keys, pause, upgrade, mainnet gates
 - **Ceremony:** [docs/ceremony.md](docs/ceremony.md) — the v1.0 multi-party trusted-setup process (not yet run)
 - **Rebuild circuits:** [docs/rebuild-circuits.md](docs/rebuild-circuits.md) — regenerate the (gitignored) proving keys + verifiers from a fresh clone
@@ -17,12 +18,12 @@ All prose lives in [`docs/`](docs/):
 
 ## Status
 
-**v0.4 (confidential / non-repudiation) complete** — feature-complete pool: KYC + sanctions +
-authority-decryptable transfers (regulator audit), with a viewing-key SDK + scanners, DeRec-style
-authority-key custody, and an HCS audit trail. Proven on Hedera testnet with real ZK proofs. v0.1–v0.3
-remain available. **v1.0 (ceremony + audit + mainnet) is staged but not executed** — it requires a
-multi-party trusted setup, a third-party audit, and Besu ≥ 25.3.0 on mainnet. See
-[docs/release-notes.md](docs/release-notes.md).
+**v0.5 (multi-asset) complete** — all four asset classes shielded on Hedera testnet with real ZK
+proofs: **HTS FT, ERC-20 FT, HTS NFT, ERC-721 NFT**. Fungible pools (`HederaZetoToken`) carry the full
+v0.4 compliance stack (KYC + sanctions + authority-decryptable audit + HCS); NFT pools
+(`HederaZetoNFT`) provide basic shielding (anonymity + nullifier double-spend). **v1.0 (ceremony +
+audit + mainnet) is staged but not executed** — it requires a multi-party trusted setup, a third-party
+audit, and Besu ≥ 25.3.0 on mainnet. See [docs/release-notes.md](docs/release-notes.md).
 
 ## Quick start
 

@@ -91,6 +91,9 @@ To validate feasibility, a proof-of-concept repository — **`zeto-hiero`** — 
 | v0.2 | `HederaZetoTokenKyc` | KYC enforcement (`Zeto_AnonEncNullifierKyc`) — enrolled identities only; nullifier SMT prevents double-spend |
 | v0.3 | `HederaZetoTokenKycSanctions` | Authored sanctions circuit — per-spend ZK non-inclusion proof against an OFAC commitment |
 | v0.4 | `HederaZetoToken` (production) | Authority-decryptable transfers (regulator audit); viewing-key SDK + scanners; DeRec-style threshold key custody; HCS audit trail; pause + reentrancy guard |
+| v0.5 | `HederaZetoToken` + `HederaZetoNFT` | Multi-asset coverage: **HTS FT, ERC-20 FT, HTS NFT, ERC-721 NFT**. Fungible pools carry the full v0.4 compliance stack; NFT pools provide basic shielding (anonymity + double-spend) |
+
+**Asset coverage (v0.5):** all four classes are shielded and testnet-proven. On Hedera an HTS fungible token exposes an ERC-20 interface and an HTS NFT exposes an ERC-721 interface at its EVM address, so the pools custody value through standard `transferFrom`/`transfer` — the only HTS-specific step is token association. Fungible tokens (HTS or ERC-20) get KYC + sanctions + non-repudiation; NFTs (HTS or ERC-721) get basic shielding, since upstream Zeto provides no NFT compliance circuits.
 
 **Representative testnet gas (Hedera testnet; USD @ $0.0804/HBAR, ~1.06×10⁻⁶ HBAR/gas):**
 
@@ -133,6 +136,7 @@ The v0.1 proof of concept established feasibility; the compliance and selective-
 | **v0.2** | KYC enforcement | `Zeto_AnonEncNullifierKyc` variant: only enrolled BabyJubJub identities can transact; nullifier SMT prevents double-spend | ✅ Complete (testnet) |
 | **v0.3** | Sanctions screening | Authored circuit adding a per-spend ZK **non-inclusion** proof against an OFAC SDN commitment — proves compliance without revealing which entries were checked | ✅ Complete (testnet) |
 | **v0.4** | Non-repudiation + selective disclosure | Authority-decryptable transfers (regulator reconstructs the full ledger), a viewing-key SDK + scanners, DeRec-style threshold custody of the authority key, and an HCS audit trail | ✅ Complete (testnet) |
+| **v0.5** | Multi-asset | ERC-20 FT custody (full compliance) + a shielded NFT pool (HTS NFT + ERC-721, basic shielding) — all four asset classes | ✅ Complete (testnet) |
 | **v1.0** | Production hardening | Multi-party trusted-setup ceremony (replaces the single-party toy keys), third-party security audit, mainnet launch | ⏳ Staged — gated on ceremony + audit + a Besu mainnet upgrade |
 
 The longest-lead-time item is the **trusted setup ceremony** (estimated 3–6 months of multi-party coordination). It, the security audit, and the mainnet launch are the remaining gates before any production deployment. *Note: the value-range extension contemplated earlier proved unnecessary — the vendored Zeto circuits already support a value range well beyond institutional needs.*

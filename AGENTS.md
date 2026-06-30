@@ -17,7 +17,16 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 
 ## Where we are (2026-06-30)
 
-✅ **v0.4 (CONFIDENTIAL / NON-REPUDIATION) COMPLETE — feature set done.** **128 tests passing.** Production pool with KYC + sanctions + authority-decryptable transfers, viewing-key SDK + scanners, DeRec-style key custody, HCS audit trail. Proven on testnet with real proofs incl. SDK scanners on real on-chain data. Full detail: `../BUILD-PLAN-v0.4-to-v1.0-Zeto-Hiero.md` + `docs/run-results-v0.4-confidential.md`.
+✅ **v0.5 (MULTI-ASSET) COMPLETE — all four asset classes shielded.** **136 tests passing.** HTS FT, ERC-20 FT, HTS NFT, ERC-721 NFT — proven on testnet with real proofs. Full detail: `../BUILD-PLAN-v0.5-MultiAsset-Zeto-Hiero.md` + `docs/run-results-v0.5-multi-asset.md`.
+- **FT:** `HederaZetoToken` (full v0.4 compliance) now custodies a plain ERC-20 too — `setupERC20(token)` (no HTS association) vs `setupHTS(token)`. `ZetoHTSBridge` gained an ERC-custody mode; the custody gate passes for HTS-associated OR ERC-custody tokens.
+- **NFT:** `HederaZetoNFT` = upstream `Zeto_NfAnonNullifier` + `ZetoNFTBridge`. Custody via ERC-721 interface (HTS NFTs expose ERC-721; only difference is association). `setupERC721`/`setupHTSNFT`, `depositNFT`/`transfer`/`withdrawNFT`. Basic shielding only (no NFT compliance circuits upstream). Circuit `nf_anon_nullifier_transfer` (2¹⁸ ptau, verifier uint[3]); witness `test/lib/zeto-witness-nf.ts` (Poseidon5 commitment / Poseidon4 nullifier). Honest limit: tokenId↔note custody binding at withdraw is operator-asserted in basic tier.
+- Testnet: ERC-20 FT pool `0x7edd8DcD…3eF7`; NFT pool `0x440b01eA…42D0`. Demos `scripts/demo-erc20-ft-testnet.ts`, `scripts/demo-nft-testnet.ts`. Tutorials `docs/tutorials-multi-asset.md`.
+
+---
+
+### Prior milestone — v0.4 (CONFIDENTIAL / NON-REPUDIATION) (2026-06-30)
+
+✅ **v0.4 COMPLETE.** **128 tests passing.** Production pool with KYC + sanctions + authority-decryptable transfers, viewing-key SDK + scanners, DeRec-style key custody, HCS audit trail. Proven on testnet with real proofs incl. SDK scanners on real on-chain data. Full detail: `../BUILD-PLAN-v0.4-to-v1.0-Zeto-Hiero.md` + `docs/run-results-v0.4-confidential.md`.
 - Pool `HederaZetoToken` = KYC+sanctions+NR. `transferConfidential` (38 public signals); authority key stored on-chain + bound into the proof, `AuthorityCiphertext` event. Pause + reentrancy mutex. Testnet pool `0x865e9306DEb38b9Ea1E79b4c08e806D0C4DA3E1d`, HCS topic `0.0.9377751`.
 - Authored circuit `anon_enc_nullifier_kyc_sanctions_non_repudiation` (2¹⁹ ptau, verifier uint[38]). `authorityPublicKey` is a PUBLIC INPUT (not baked in) → rotatable without re-ceremony (deviates from PRD F-1). Value-range is a no-op (check-positive already GreaterEqThan(100)).
 - `sdk/`: OutputScanner, AuthorityAuditScanner, SanctionsPathBuilder, ViewingKey, AuthorityKeyManager (field-Shamir — DeRec lib unavailable), HCS taxonomy/poster. Witness `test/lib/zeto-witness-nr.ts`; real-proof e2e `test/nr-real-proof.test.ts`; demo `scripts/demo-v04-confidential-testnet.ts`.
