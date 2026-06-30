@@ -6,6 +6,17 @@ Run as written, end to end (fresh Alice & Bob accounts created in Step 1). Opera
 `0.0.7628788` (`0x17C137c42789D758Cb8c777DF29b656ff90a43C2`). Private keys are intentionally
 omitted from this record; they live in `.env` (gitignored).
 
+> **Re-validation (2026-06-30).** The shielded-pool flow (Sections 5–9) was re-run on testnet against
+> the established ZUSD-TEST token via `scripts/demo-mvp-testnet.ts` to confirm the tutorial still works
+> after the v0.2–v0.4 work. Fresh result — pool `0xA47d62c0Dd3d9Ae837Ae90e0a500387Bc43E3997`:
+> [setupHTS](https://hashscan.io/testnet/transaction/0xf4182bc6a843730a99248c8dcb14e2927e9b15f3dfecc8ebc070d88acea3a622) 783,314 gas ·
+> [deposit](https://hashscan.io/testnet/transaction/0xe103339a30a80f57218be1e759611929b916739121ed70e8fcb6250f5f85f618) 325,335 gas (proof 11.5 s) ·
+> [transfer](https://hashscan.io/testnet/transaction/0x51dfea3feccfe438785b0f0873ecbe7dc64a0b18691c7c1f5cc8d03b1e584c9e) 415,870 gas (Bob decrypted value=40) ·
+> [withdraw](https://hashscan.io/testnet/transaction/0x749370d1d7d4c0a58e1b0cd39b19b6d55dbfcbeafdf9f5c6ddc509ce774a5bd2) 330,404 gas.
+> Invariant held: `shieldedSupply == pool balance == 60`; gas matches the original capture below within
+> normal variation. (The naive Alice+Bob+pool sum differs from 1000 only because Alice/Bob carry
+> balances from earlier runs — see the [v0.2](run-results-v0.2-kyc.md)/[v0.3](run-results-v0.3-sanctions.md)/[v0.4](run-results-v0.4-confidential.md) results for the compliance-enabled flows.)
+
 ---
 
 ## Step 1 — Create Accounts (`AccountCreateTransaction`)

@@ -629,7 +629,15 @@ The pool invariant holds: **`shieldedSupply == pool token balance == 60`**, and 
 
 You created HTS accounts and a fungible token with the Hiero JS SDK, deployed a zero-knowledge **shielded pool** on Hedera testnet, and ran a full **deposit → private transfer → withdraw** lifecycle with **real Groth16 proofs**. The deposit and withdraw amounts are public (the auditable on/off-ramps), while the in-pool transfer hides amounts and the sender→recipient link. The whole flow cost roughly 0.3–0.8 HBAR per step in gas, with client-side proof generation dominating latency.
 
-This is **v0.1** — it deliberately excludes KYC, sanctions screening, and regulator auditability. Those land in later versions ([roadmap](overview.md#7-roadmap)). v0.2 adds KYC enforcement by swapping the pool's transfer circuit for `Zeto_AnonEncNullifierKyc` and wiring the `HederaKycRegistry`.
+This tutorial teaches the **v0.1** flow — the simplest pool (`Zeto_AnonEnc`), deliberately without KYC, sanctions, or regulator auditability, so the privacy mechanics are clear. Those compliance layers are **built and testnet-proven** in the later pools:
+
+| Version | Pool | Adds | Run results |
+|---|---|---|---|
+| v0.2 | `HederaZetoTokenKyc` | KYC enrollment + nullifier double-spend prevention | [run-results-v0.2-kyc.md](run-results-v0.2-kyc.md) |
+| v0.3 | `HederaZetoTokenKycSanctions` | ZK sanctions non-inclusion (PPOI) | [run-results-v0.3-sanctions.md](run-results-v0.3-sanctions.md) |
+| v0.4 | `HederaZetoToken` | authority-decryptable transfers (regulator audit) + viewing-key SDK + HCS audit trail | [run-results-v0.4-confidential.md](run-results-v0.4-confidential.md) |
+
+Each has its own runnable testnet demo under `scripts/` (`demo-v02-kyc-testnet.ts`, `demo-v03-sanctions-testnet.ts`, `demo-v04-confidential-testnet.ts`) and the SDK scanners live in `sdk/`. See the [roadmap](overview.md#7-roadmap) for the full picture and the [operator runbook](operator-runbook.md) for how to deploy and operate each pool.
 
 > **Scope note (v0.1):** the per-step files use **fixed demo amounts** (deposit 100, transfer 40 + 60 change, withdraw 40) and the three `.env` accounts, and deploy a **fresh** pool on each run of step 05 (the pool address is saved to `.tutorial-state.json`, not `.env`). Parameterized per-operation commands against a persistent deployment are a future tooling step.
 >

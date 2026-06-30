@@ -1,10 +1,12 @@
-# Zeto-Hiero MVP (v0.1) — Architecture, Tutorial, Performance, Roadmap
+# Zeto-Hiero — Architecture, Tutorial, Performance, Roadmap
 
-**Status:** ✅ v0.1 COMPLETE — full shielded deposit/transfer/withdraw runs on Hedera testnet with a real HTS token and real ZK proofs; balances reconcile.
-**Repo:** github.com/Reccetech/zeto-hiero (private)
-**In this repo:** [release-notes.md](release-notes.md) · [tutorial.md](tutorial.md) · [../examples/walkthrough/](../examples/walkthrough/) (runnable walkthrough) · the privacy model is §2, the version roadmap is §7
-**Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full product spec) · BUILD-PLAN-Zeto-Hiero.md (production roadmap) · BUILD-PLAN-MVP-Zeto-Hiero.md (MVP checklist)
-**Last updated:** 2026-06-18
+**Status:** ✅ **Feature set complete (v0.1 → v0.4).** Shielded HTS deposit/transfer/withdraw with KYC enforcement, ZK sanctions screening, and authority-decryptable (non-repudiation) transfers — all proven on Hedera testnet with a real HTS token and real ZK proofs. **128 tests passing.** Production launch (v1.0) is gated on a multi-party trusted-setup ceremony, a third-party audit, and a Besu mainnet upgrade.
+**Repo:** github.com/Reccetech/zeto-hiero (public)
+**In this repo:** [release-notes.md](release-notes.md) · [tutorial.md](tutorial.md) · [../examples/walkthrough/](../examples/walkthrough/) (runnable v0.1 walkthrough) · run results for [v0.1](run-results.md) / [v0.2](run-results-v0.2-kyc.md) / [v0.3](run-results-v0.3-sanctions.md) / [v0.4](run-results-v0.4-confidential.md) · [operator-runbook.md](operator-runbook.md) · [ceremony.md](ceremony.md) · the privacy model is §2, the version roadmap is §7
+**Internal design docs (not in this repo):** PRD-Zeto-Hiero.md (full product spec) · BUILD-PLAN-Zeto-Hiero.md + the per-version build plans (v0.2 KYC, v0.3 sanctions, v0.4→v1.0)
+**Last updated:** 2026-06-30
+
+> **Reading note.** This document was written around the v0.1 MVP and still uses it as the teaching baseline (the privacy model in §2 and the tutorial in §5 are the simplest `Zeto_AnonEnc` flow). Sections §3.2, §6, and §7 are updated for the full v0.1→v0.4 feature set. For the compliance-complete picture, read §2's limitation notes alongside §7.
 
 ---
 
@@ -13,6 +15,8 @@
 Zeto-Hiero is a **privacy-preserving token pool** for Hedera. It lets institutions move a fungible token (an HTS token) between accounts so that **amounts and the sender/recipient relationship are hidden on-chain**, while still being backed 1:1 by the real token held in the pool.
 
 It is a Hedera deployment of **[Zeto](https://github.com/hyperledger-labs/zeto)** — the Hyperledger Labs zero-knowledge UTXO token toolkit (Apache 2.0, by Kaleido) — combined with Hedera-specific contracts that bridge to the Hedera Token Service (HTS).
+
+> **Supported assets — fungible tokens (FT) today; NFTs are a future increment.** Every pool here (v0.1–v0.4) shields a **fungible** token. On Hedera the underlying asset is a native **HTS fungible token**, which the pool custodies through its ERC-20 interface (HTS fungible tokens expose ERC-20 at their EVM address) — so an **ERC-20**-style FT is exactly what's covered. **ERC-721 / HTS NFTs are not built in zeto-hiero yet.** Upstream Zeto *does* provide non-fungible variants (`Zeto_NfAnon`, `Zeto_NfAnonNullifier`, with the commitment binding a `tokenId` + URI), so a shielded-NFT pool is a feasible future increment (HTS-NFT custody + the `nf_*` circuits) — it simply hasn't been adapted for Hedera in this work.
 
 **The MVP (v0.1)** is the smallest version that proves the concept end-to-end on Hedera:
 
@@ -132,7 +136,7 @@ Privacy is real but not absolute:
 | `IHederaTokenService` / `HederaResponseCodes` | ours | Interface + constants for the Hedera Token Service system contract at `0x167`. |
 | Groth16 verifiers (`DepositVerifierMVP`, …) | generated | On-chain BN254 pairing check for each circuit. Generated from our compiled circuits. |
 
-**Built but not wired into the MVP pool** (foundation for v0.2+): `SanctionsModule`, `HederaKycRegistry` (UUPS), `ZetoVkeySetter` (UUPS, with the "all expected circuits committed before lock" invariant). These are fully unit-tested and waiting for their feature versions.
+**Later pools build on this** (the §7 roadmap, all complete + testnet-proven): **`HederaZetoTokenKyc`** (v0.2, `Zeto_AnonEncNullifierKyc` — KYC identities + nullifier SMT), **`HederaZetoTokenKycSanctions`** (v0.3, adds the authored sanctions non-inclusion circuit + wires `SanctionsModule`), and **`HederaZetoToken`** (v0.4, the production pool — adds authority-decryptable transfers, pause, and a reentrancy mutex). The v0.2+ pools link external `PoseidonUnit2L/3L` + `SmtLib` libraries (for the on-chain SMTs) and use larger circuits (2¹⁸–2¹⁹ ptau). The KYC registry is the **embedded `Registry`** of the upstream KYC variant (enroll via `pool.register(...)`), not the standalone `HederaKycRegistry`. `ZetoVkeySetter` (UUPS, "all expected circuits committed before lock") remains a deployment-workflow helper for the v1.0 ceremony.
 
 ### 3.3 The zero-knowledge layer
 
@@ -366,25 +370,32 @@ Reproduce with: `npx hardhat run scripts/phase6-create-token.ts --network hedera
 
 ## 7. Roadmap
 
-The MVP is the first rung. Each version adds **one** capability so complexity grows incrementally and every step ships something testable.
+Each version added **one** capability, so complexity grew incrementally and every step shipped something testable on Hedera testnet. **v0.1 → v0.4 are complete and testnet-proven; v1.0 (production launch) remains.**
 
 | Version | Adds | Status |
 |---|---|---|
-| **v0.1 (MVP)** | Shielded HTS deposit/transfer/withdraw; real ZK proofs on testnet | ✅ **Complete** — full deposit→transfer→withdraw on testnet with a real HTS token; balances reconcile; gas measured |
-| **v0.2** | KYC enforcement — swap to `Zeto_AnonEncNullifierKyc` + wire `HederaKycRegistry`; participants must be enrolled to transact | Foundation built (registry + tests); not yet wired |
-| **v0.3** | Sanctions screening — new sanctions circuit + `SanctionsModule`; PPOI-style on-chain non-inclusion proofs | `SanctionsModule` built & tested |
-| **v0.4** | Non-repudiation + DeRec authority-key custody + HCS audit trail (regulator auditability, threshold key custody, on-chain event log) | Designed in PRD; not started |
-| **v1.0** | Production hardening — multi-party trusted-setup ceremony (replaces test keys), security audit, mainnet launch | Designed in PRD; gated on ceremony + audit calendar |
+| **v0.1 (MVP)** | Shielded HTS deposit/transfer/withdraw; real ZK proofs on testnet (`HederaZetoTokenLite`, `Zeto_AnonEnc`) | ✅ **Complete** — full deposit→transfer→withdraw on testnet; balances reconcile |
+| **v0.2** | KYC enforcement — `Zeto_AnonEncNullifierKyc` + nullifier SMT; only registered BabyJubJub identities can transact | ✅ **Complete** — `HederaZetoTokenKyc`; KYC + double-spend prevention proven on testnet ([run](run-results-v0.2-kyc.md)) |
+| **v0.3** | Sanctions screening — authored `anon_enc_nullifier_kyc_sanctions` circuit + `SanctionsModule`; per-spend ZK non-inclusion (PPOI) | ✅ **Complete** — `HederaZetoTokenKycSanctions`; sanctioned spend can't produce a proof ([run](run-results-v0.3-sanctions.md)) |
+| **v0.4** | Non-repudiation (authority-decryptable transfers) + viewing-key SDK & scanners + DeRec-style authority-key custody + HCS audit trail | ✅ **Complete** — `HederaZetoToken` (production pool); regulator reconstructs the full ledger from the authority ciphertext ([run](run-results-v0.4-confidential.md)) |
+| **v1.0** | Production hardening — multi-party trusted-setup ceremony (replaces single-party test keys), third-party security audit, mainnet launch | ⏳ **Staged, not executed** — codeable parts done (invariant tests, ceremony tooling, gated launch script, runbook); gated on the items below |
 
-### Immediate next step (v0.2)
+### Compliance posture (delivered across v0.2–v0.4)
 
-v0.1 is complete. The next increment is **v0.2 — KYC enforcement**: swap `Zeto_AnonEnc` for `Zeto_AnonEncNullifierKyc`, wire in the existing `HederaKycRegistry`, enroll Alice and Bob, and re-run the demo with KYC active. The transfer-witness tooling built for v0.1 (`test/lib/zeto-witness.ts`, `maci-crypto` + `zeto-js`) carries forward; the KYC variant adds a nullifier tree + identity-membership signals to the witness.
+- **KYC gate (v0.2)** — only enrolled identities can be a sender or recipient inside the pool.
+- **Sanctions screening (v0.3)** — every transfer proves, in ZK, that the spend is *not* on a sanctions list — without revealing which entries were checked.
+- **Selective disclosure (v0.4)** — recipients decrypt their own notes; a regulator holding the pool's **authority key** decrypts the **authority ciphertext** on every transfer to reconstruct the full ledger; neither capability grants spend access.
+- **Authority-key custody (v0.4)** — `AuthorityKeyManager` splits the authority key T-of-N (DeRec-style; field-Shamir fallback) so no single party holds it whole.
+- **HCS audit trail (v0.4)** — a per-pool Hedera Consensus Service topic (threshold submit key) anchors every admin action (key/sanctions/identity-root updates, pause, upgrade).
 
-### Known production gaps (tracked in the PRD)
+### Remaining for mainnet (v1.0 — gated on humans / external dependencies)
 
-- **Trusted setup ceremony** — v0.1 uses insecure single-party proving keys. Mainnet requires a multi-party Groth16 Phase-2 ceremony (3–6 month coordination). This is the critical-path item.
+- **Trusted setup ceremony** — all circuits currently use insecure **single-party** test keys. Mainnet requires a multi-party Groth16 Phase-2 ceremony (≥10 contributors, 3–6 months). Process + tooling: [ceremony.md](ceremony.md), `scripts/ceremony-contribute.ts`. **Critical-path item.**
+- **Third-party security audit** — the invariant/property suite (`test/invariants.test.ts`) feeds it; it does not replace it.
 - **Besu ≥ 25.3.0** — Hedera consensus nodes must ship the fix for CVE-2025-30147 (a BN254 point-on-curve check) before any mainnet deployment. As of last check the network was on 25.2.2.
-- **Reentrancy guard, pause, recipient-binding** — deferred design hardening (issues E-1/E-3/E-8) that applies to the production contract, not the v0.1 lite pool. Documented in the PRD engineering review.
+- The mainnet launch itself is gated in code (`scripts/mainnet-launch.ts` refuses to deploy until ceremony + audit + Besu + explicit confirmation), and run from [operator-runbook.md](operator-runbook.md) §Mainnet.
+
+> **Production hardening already in the v0.4 pool:** `HederaZetoToken` adds a pause switch and a reentrancy mutex (the E-3/E-8 items); the nullifier variants (v0.2+) also retired the v0.1 "spent note is visible" limitation.
 
 ---
 
@@ -394,26 +405,34 @@ v0.1 is complete. The next increment is **v0.2 — KYC enforcement**: swap `Zeto
 zeto-hiero/
 ├── README.md            Entry point + quick start
 ├── AGENTS.md            Contributor / AI handoff
-├── docs/                All prose docs:
-│                        overview.md (this file), tutorial.md, run-results.md,
-│                        rebuild-circuits.md, release-notes.md
+├── docs/                All prose docs: overview.md (this file), tutorial.md,
+│                        run-results*.md (v0.1–v0.4), rebuild-circuits.md,
+│                        release-notes.md, privacy-strategy.md, operator-runbook.md, ceremony.md
 ├── contracts/
-│   ├── hedera/          HederaZetoTokenLite, ZetoHTSBridge, SanctionsModule,
-│   │                    HederaKycRegistry, ZetoVkeySetter, IHederaTokenService, HederaResponseCodes
-│   ├── verifiers/       Our Groth16 verifiers: DepositVerifierMVP, AnonEncVerifierMVP, WithdrawVerifierMVP
-│   └── test/            Mocks (HTS precompile, ERC-20, verifier) + test harness contracts
-├── circuits/            build/ + ptau/ (both gitignored; regenerable — see docs/rebuild-circuits.md)
-├── deploy/              hardhat-deploy scripts (verifiers, vkey-setter, lite-pool) — local
-├── scripts/             phase6-create-token.ts, demo-mvp-testnet.ts, testnet-deposit-proof.ts, check-test-accounts.ts
-├── examples/walkthrough/  Runnable per-transaction tutorial scripts (01–09 + _zeto.ts)
-├── test/                85 tests (unit + integration + real-proof) + lib/zeto-witness.ts
+│   ├── hedera/          Pools: HederaZetoTokenLite (v0.1), HederaZetoTokenKyc (v0.2),
+│   │                    HederaZetoTokenKycSanctions (v0.3), HederaZetoToken (v0.4, production);
+│   │                    + ZetoHTSBridge, SanctionsModule, HederaKycRegistry, ZetoVkeySetter,
+│   │                    IHederaTokenService, HederaResponseCodes
+│   ├── verifiers/       Our Groth16 verifiers (deposit, anon_enc, withdraw, withdraw_nullifier,
+│   │                    KYC, sanctions, and the v0.4 non-repudiation transfer)
+│   └── test/            Mocks (HTS precompile, ERC-20, Groth16 verifier) + test harness contracts
+├── circuits/
+│   ├── sources/         Authored circuits (v0.3 sanctions, v0.4 non-repudiation)
+│   └── build/ + ptau/   gitignored; regenerable — see docs/rebuild-circuits.md
+├── sdk/                 @hiero-privacy/zeto-sdk: scanners (recipient + authority audit),
+│                        sanctions path builder, authority-key custody (Shamir), HCS audit codec
+├── deploy/              hardhat-deploy scripts — local
+├── scripts/             per-version testnet demos (demo-mvp / v02 / v03 / v04), token setup,
+│                        create-hcs-topic, ceremony-contribute, mainnet-launch (gated)
+├── examples/walkthrough/  Runnable per-transaction v0.1 tutorial scripts (01–09 + _zeto.ts)
+├── test/                128 tests (unit + integration + real-proof + invariants) + lib/ witness helpers
 └── vendor/zeto/         Upstream Zeto v0.2.2 (git submodule)
 ```
 
-**Test coverage:** 85 passing — HTS bridge (16), sanctions (15), KYC registry (21), vkey-setter (16), lite pool integration (6), verifier deploy (3), upstream smoke (3), real-proof deposit (4), end-to-end deposit→transfer→withdraw (1).
+**Test coverage:** 128 passing across v0.1–v0.4 — HTS bridge, sanctions, KYC registry, vkey-setter, the four pools' integration tests, verifier deploys, Poseidon/SmtLib linking, real-proof end-to-end flows (anon, KYC, sanctions, non-repudiation with authority decrypt), SDK scanners, Shamir custody, HCS taxonomy, and shielded-supply invariants.
 
 ---
 
 ## 9. Summary
 
-The Zeto-Hiero MVP demonstrates that a Zeto privacy pool runs on Hedera: the contract composes upstream Zeto with HTS support cleanly (12.2 KB, well within limits), the full test suite is green (85 passing), and — most importantly — the **complete shielded flow (deposit → private transfer → withdraw) runs on live Hedera testnet with a real HTS token and real Groth16 proofs**, with balances reconciling exactly and gas measured (deposit 325K, transfer 416K, withdraw 330K). The biggest technical risk (does the ZK cryptography work on Hedera's EVM?) is fully retired. What remains is additive: the compliance and custody layers (v0.2–v0.4), then the production trusted-setup ceremony and audit (v1.0).
+Zeto-Hiero demonstrates that a compliance-complete Zeto privacy pool runs on Hedera. Starting from the v0.1 MVP — which retired the biggest technical risk (does the ZK cryptography work on Hedera's EVM?) — the project added, one increment at a time and each proven on live testnet with real Groth16 proofs: **KYC enforcement + nullifier double-spend prevention (v0.2)**, **ZK sanctions screening (v0.3)**, and **authority-decryptable transfers for regulator audit, viewing-key scanners, threshold key custody, and an HCS audit trail (v0.4)**. The full suite is green (**128 passing**), and the complete confidential flow (deposit → private transfer → withdraw, with KYC + sanctions + authority decrypt) runs end-to-end on Hedera testnet with balances reconciling and the regulator reconstructing the ledger from on-chain ciphertext. What remains is **not additive engineering** but production hardening that needs people and time: a multi-party trusted-setup ceremony, a third-party security audit, and the Besu mainnet upgrade (v1.0).

@@ -168,6 +168,49 @@ echo "Rebuild complete. Redeploy the pool (examples/walkthrough/05) to use the r
 
 ---
 
+## v0.2–v0.4 circuits (KYC, sanctions, non-repudiation)
+
+The scripts above cover the three **v0.1** circuits. The later versions add larger circuits that need
+**bigger Powers of Tau** (snarkjs requires the ptau domain to exceed ~2× the constraint count):
+
+| Circuit | Version | Constraints (approx) | ptau | Verifier contract | Public signals |
+|---|---|---|---|---|---|
+| `withdraw_nullifier` | v0.2 | ~80.6k | 2¹⁹ | `WithdrawNullifierVerifierMVP` | 7 |
+| `anon_enc_nullifier_kyc` | v0.2 | ~118k | 2¹⁸ | `AnonEncNullifierKycVerifierMVP` | 19 |
+| `anon_enc_nullifier_kyc_sanctions` | v0.3 | ~191k | 2¹⁹ | `AnonEncNullifierKycSanctionsVerifierMVP` | 20 |
+| `anon_enc_nullifier_kyc_sanctions_non_repudiation` | v0.4 | ~199k | 2¹⁹ | `AnonEncNullifierKycSanctionsNRVerifierMVP` | 38 |
+
+Download the extra ptau the same way (`for n in 18 19; do curl ... powersOfTau28_hez_final_${n}.ptau; done`).
+
+**Two compile origins.** The v0.2 circuits live in the upstream submodule (`vendor/zeto/zkp/circuits/`),
+so they compile from there exactly like the v0.1 ones. The v0.3/v0.4 circuits are **ours**, in
+`circuits/sources/`, and compile from the submodule dir with **both** library paths so the upstream
+`lib/` includes *and* circomlib resolve:
+
+```bash
+REPO=$(pwd)
+cd vendor/zeto/zkp/circuits
+# v0.2 (upstream circuits, compiled in place):
+"$REPO/tools/bin/circom.exe" withdraw_nullifier.circom        --r1cs --wasm --sym -l node_modules -o "$REPO/circuits/build"
+"$REPO/tools/bin/circom.exe" anon_enc_nullifier_kyc.circom    --r1cs --wasm --sym -l node_modules -o "$REPO/circuits/build"
+# v0.3/v0.4 (our authored circuits — note the extra `-l .`):
+"$REPO/tools/bin/circom.exe" "$REPO/circuits/sources/anon_enc_nullifier_kyc_sanctions.circom"                 --r1cs --wasm --sym -l node_modules -l . -o "$REPO/circuits/build"
+"$REPO/tools/bin/circom.exe" "$REPO/circuits/sources/anon_enc_nullifier_kyc_sanctions_non_repudiation.circom" --r1cs --wasm --sym -l node_modules -l . -o "$REPO/circuits/build"
+cd "$REPO"
+```
+
+Then run the same `groth16 setup → contribute → export verificationkey → export solidityverifier`
+sequence as above, using the ptau column from the table and renaming each `Groth16Verifier` to its
+contract name (bump pragma to `^0.8.27`). The v0.2+ pools also link the **Poseidon/SmtLib** libraries
+at deploy time (`test/lib/poseidon-deploy.ts`) for their on-chain SMTs — that's a deploy step, not a
+circuit-build step.
+
+> The KYC variants screen by **nullifier**; the off-chain SMT helpers in `test/lib/zeto-witness-kyc.ts`,
+> `…-sanctions.ts`, and `…-nr.ts` must stay in lock-step with the on-chain trees (verified in the
+> real-proof tests, which assert off-chain roots equal on-chain roots).
+
+---
+
 ## Why the committed verifiers can't be reproduced bit-for-bit
 
 Groth16 proving/verifying keys depend on the random entropy contributed during `zkey contribute`. The original v0.1 setup's entropy was not preserved (deliberately — it's a throwaway toy setup), so a rebuild necessarily yields different keys. This is acceptable for the MVP: the committed verifiers exist only to demonstrate the flow on testnet. The production path (v1.0) discards all of this and runs a real, multi-party, auditable Powers-of-Tau + Phase-2 ceremony whose transcript *is* preserved and verifiable. See [`overview.md`](overview.md) (§7 Roadmap) and [`release-notes.md`](release-notes.md).
