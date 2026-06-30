@@ -17,6 +17,19 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 
 ## Where we are (2026-06-30)
 
+✅ **v0.3 (SANCTIONS) COMPLETE.** **110 tests passing.** Adds ZK sanctions non-inclusion (PPOI) on top of v0.2, proven on Hedera testnet with real proofs. Key facts (full detail in `../BUILD-PLAN-v0.3-Sanctions-Zeto-Hiero.md` + `docs/run-results-v0.3-sanctions.md`):
+- Pool `HederaZetoTokenKycSanctions` = `Zeto_AnonEncNullifierKyc` + `ZetoHTSBridge` + `SanctionsModule`. New `transferScreened(...)` (the inherited 19-signal `transfer` is unusable — the `_verifier` slot holds the 20-signal sanctions verifier). Appends `uint256(sanctionsMerkleRoot)` as public input #20; `_requireCurrentSanctionsRoot` gives a fast revert on stale root.
+- **Authored circuit** `circuits/sources/anon_enc_nullifier_kyc_sanctions.circom` (no upstream equivalent): KYC base + per-input `SMTVerifier(fnc=1)` non-inclusion. **`fnc=1` = non-membership** (the PRD says fnc=0 — it's wrong; confirmed empirically). `sanctionsRoot` declared **last** so it appends as public signal #20 (snarkjs orders public signals as [outputs, then inputs by declaration order]). ~191k constraints → **2¹⁹ ptau**. Verifier `AnonEncNullifierKycSanctionsVerifierMVP` (`uint[20]`).
+- `SanctionsModule` (built in v0.1) now wired: `updateSanctionsMerkleRoot` (owner-or-oracle), `setSanctionsOracle`. Sanctions tree is **off-chain rooted** — only the root is on-chain (no new on-chain SMT). Sanctions keyed by **nullifier** (PRD default).
+- Witness: `test/lib/zeto-witness-sanctions.ts` — `newSanctionsSmt`/`addSanctioned`/`buildNonInclusionPath` (just `generateCircomVerifierProof` on an absent key) / `prepareKycSanctionsTransferProof`. Real-proof e2e `test/kyc-sanctions-real-proof.test.ts` (clean spend verifies; sanctioned spend can't produce a witness). Demo `scripts/demo-v03-sanctions-testnet.ts`. Testnet pool `0xe47b3Bd5Ae7B71882E47104f66FdF5cE928E56Ce`.
+- **Gas insight:** screened transfer ~1.59M gas — no material increase over v0.2's KYC transfer. Non-inclusion is verified inside the proof; on-chain it's just one more public signal. Richer compliance, ~flat settlement cost.
+
+**Next increment: v0.4 — non-repudiation + authority custody + HCS audit** (authority BJJ encryption of output values, DeRec key custody, HCS audit topic; upgrades to the full PRD circuit `anon_enc_nullifier_kyc_sanctions_non_repudiation`; see Phases 3+7 of `../BUILD-PLAN-Zeto-Hiero.md`).
+
+---
+
+### Prior milestone — v0.2 (KYC) (2026-06-30)
+
 ✅ **v0.2 (KYC) COMPLETE.** **103 tests passing.** KYC-gated shielded flow with nullifier double-spend prevention, proven on Hedera testnet with real Groth16 proofs. Key facts (full detail in `../BUILD-PLAN-v0.2-KYC-Zeto-Hiero.md` + `docs/run-results-v0.2-kyc.md`):
 - Pool `HederaZetoTokenKyc` = upstream `Zeto_AnonEncNullifierKyc` + `ZetoHTSBridge`. Overrides internal virtual `_deposit` **and `_withdrawWithNullifiers`** (the nullifier withdraw path).
 - **KYC registry is the *embedded* `Registry` base**, not the standalone `HederaKycRegistry`. Enroll via owner-only `pool.register(pubKey, data)`; current root = `getIdentitiesRoot()`. `initialize` is the unchanged 4-arg form.
@@ -36,16 +49,16 @@ Internal design docs (kept in the working folder `../`, not committed to this re
 - **Full shielded flow proven on Hedera testnet** with a real HTS token: deposit → private transfer → withdraw, balances reconcile (Alice 900 + Bob 40 + pool 60 == 1000). Gas: deposit 325,347 · transfer 415,954 · withdraw 330,392 · setupHTS 783,314. See `scripts/demo-mvp-testnet.ts` + `scripts/phase6-create-token.ts`; HashScan links in `docs/overview.md` §6.1 (and the internal `BUILD-PLAN-MVP-Zeto-Hiero.md` Phase 6).
 - Transfer-witness tooling lives in `test/lib/zeto-witness.ts` (uses `maci-crypto` + `zeto-js`; proofs via `snarkjs.groth16.fullProve` against `circuits/build/`). `maci-crypto` 1.1.1 builds + loads fine on Windows — the native-dep worry didn't materialize.
 
-## Your next task (v0.3 — sanctions screening)
+## Your next task (v0.4 — non-repudiation + authority custody + HCS audit)
 
-v0.2 is shipped. The next increment is **v0.3 — sanctions screening** (see Phase 3 of `../BUILD-PLAN-Zeto-Hiero.md`):
+v0.3 is shipped. The next increment is **v0.4** (see Phases 3 + 7 of `../BUILD-PLAN-Zeto-Hiero.md`):
 
-- Add a ZK **non-inclusion** proof: prove a transfer's owners are NOT in an OFAC SDN commitment (a sanctions SMT), without revealing which addresses were checked.
-- Wire in the existing `SanctionsModule` (built + tested in v0.1, not yet active).
-- This needs a **custom circuit** — the upstream `anon_enc_nullifier_kyc` circuit extended with a sanctions non-inclusion signal (upstream has no such variant). Compile + own-setup + stage its verifier the same way as v0.2 (2¹⁸ ptau).
-- Extend `test/lib/zeto-witness-kyc.ts` with the sanctions SMT + non-inclusion path generation.
+- Add **authority BJJ encryption** of output values so a designated authority can decrypt for audit (non-repudiation). The authority public key is a circuit parameter — must be fixed before any ceremony.
+- **DeRec-style key custody** for the authority key.
+- **HCS audit-trail topic** + event taxonomy.
+- This upgrades the circuit to the full PRD production circuit `anon_enc_nullifier_kyc_sanctions_non_repudiation` (extends the v0.3 `anon_enc_nullifier_kyc_sanctions.circom` with the authority-encryption block). Likely 2¹⁹ ptau again or larger.
 
-A clean reference for the KYC build (what worked, the gotchas) is `../BUILD-PLAN-v0.2-KYC-Zeto-Hiero.md` — read its "Key findings" section first.
+Clean references for prior builds (read their "Key findings" / "Build progress" sections first): `../BUILD-PLAN-v0.2-KYC-Zeto-Hiero.md` and `../BUILD-PLAN-v0.3-Sanctions-Zeto-Hiero.md`.
 
 ## Environment (same machine, already set up)
 

@@ -55,4 +55,14 @@ contract MockGroth16Verifier {
     ) external pure returns (bool) {
         return true;
     }
+
+    // v0.3 KYC+sanctions path: anon_enc_nullifier_kyc_sanctions transfer public signals [20]
+    function verifyProof(
+        uint256[2] calldata,
+        uint256[2][2] calldata,
+        uint256[2] calldata,
+        uint256[20] calldata
+    ) external pure returns (bool) {
+        return true;
+    }
 }

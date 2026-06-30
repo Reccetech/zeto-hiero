@@ -7,6 +7,39 @@ contracts, tooling, and docs *on top* of it.
 
 ---
 
+## v0.3.0 — Sanctions screening (2026-06-30)
+
+Adds ZK **sanctions screening** (PPOI equivalent) on top of v0.2: every screened transfer proves — in zero knowledge — that each spent nullifier is **not** on a sanctions list, without revealing which entries were checked. Proven end-to-end on Hedera testnet with real Groth16 proofs. v0.1/v0.2 contracts and flows remain available.
+
+### What we added on top of v0.2
+- **Authored circuit `anon_enc_nullifier_kyc_sanctions.circom`** (`circuits/sources/`) — there is no upstream Zeto circuit for this. Extends the upstream `anon_enc_nullifier_kyc` base with a per-input `SMTVerifier(fnc=1)` **non-inclusion** proof against a sanctions SMT, adding one public input `sanctionsRoot` (declared last → appends as public signal #20). ~191k constraints → **2¹⁹ ptau** (deposit/withdraw circuits unchanged).
+- **`contracts/verifiers/AnonEncNullifierKycSanctionsVerifierMVP.sol`** — own-setup Groth16 verifier, `uint[20]` public signals.
+- **`contracts/hedera/HederaZetoTokenKycSanctions.sol`** — pool = `Zeto_AnonEncNullifierKyc` + `ZetoHTSBridge` + `SanctionsModule` (17.5 KB). New `transferScreened(...)` mirrors upstream's transfer body, appends `uint256(sanctionsMerkleRoot)` as the 20th public input, and calls `_requireCurrentSanctionsRoot` up front for a clean fast revert. **`SanctionsModule` (built in v0.1) is now wired in** — `updateSanctionsMerkleRoot` (owner-or-oracle), `setSanctionsOracle`.
+- **`test/lib/zeto-witness-sanctions.ts`** — off-chain sanctions SMT, `buildNonInclusionPath`, `prepareKycSanctionsTransferProof` (sanctions keyed by nullifier).
+- **`scripts/demo-v03-sanctions-testnet.ts`** + `docs/run-results-v0.3-sanctions.md`.
+
+### Correction to the PRD
+The PRD §6.2 states `fnc=0` for non-membership. The actual iden3 circomlib (and the in-repo `check-smt-proof.circom`) uses **`fnc=1` for exclusion/non-membership**. Confirmed empirically before building; the circuit uses `fnc=1`.
+
+### Tests
+- +7 tests over v0.2 (**110 total**): sanctions pool integration (root management, `SanctionsRootMismatch` on stale root, double-spend regression, UUPS auth) and a **real-proof sanctions e2e** — a clean spend verifies on-chain; a sanctioned spend cannot produce a witness (negative test).
+- `MockGroth16Verifier` extended with a `[20]` overload.
+
+### Verified on Hedera testnet
+KYC enrollment → set sanctions root → deposit → sanctions-screened transfer, real proofs. Pool `0xe47b3Bd5Ae7B71882E47104f66FdF5cE928E56Ce`. **Notable:** the screened transfer cost ~1.59M gas — **no material increase over v0.2's KYC transfer** (the non-inclusion check lives inside the proof; on-chain it's one extra public signal in the constant-cost pairing). Richer compliance, ~flat settlement cost. See `run-results-v0.3-sanctions.md`.
+
+### Intentional deltas / notes
+- Screens the **transfer** spend path (per PRD). Deposit/withdraw remain un-screened upstream.
+- Sanctions tree is **off-chain rooted** — only the root lives on-chain (`SanctionsModule`); no new on-chain SMT.
+- Inherited 19-signal `transfer` is unusable on this pool (the `_verifier` slot holds the 20-signal verifier) — use `transferScreened`.
+- Still single-party (toy) trusted setup; multi-party ceremony remains a v1.0 gate.
+- Deferred: non-repudiation / authority encryption / DeRec / HCS audit (v0.4).
+
+### Next: v0.4 — non-repudiation + authority custody
+Authority BJJ encryption of output values (audit decryptability) + DeRec key custody + HCS audit topic; upgrades to the full PRD circuit `anon_enc_nullifier_kyc_sanctions_non_repudiation`.
+
+---
+
 ## v0.2.0 — KYC enforcement (2026-06-30)
 
 Adds KYC identity enforcement and nullifier-based double-spend prevention on top of the v0.1 pool,
